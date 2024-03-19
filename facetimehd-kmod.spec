@@ -29,6 +29,7 @@ Requires: facetimehd-firmware
 # kernel bug? # "Cannot generate ORC metadata for CONFIG_UNWINDER_ORC=y"
 # see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=886474
 BuildRequires:  elfutils-libelf-devel
+BuildRequires:	gcc
 BuildRequires:  rpmdevtools
 BuildRequires:  kmodtool
 BuildRequires:  kernel-devel
