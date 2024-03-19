@@ -1,39 +1,47 @@
+# for some reason debug package does not work
+%global debug_package %{nil}
 # buildforkernels macro hint: when you build a new version or a new release
 # that contains bugfixes or other improvements then you must disable the
 # "buildforkernels newest" macro for just that build; immediately after
 # queuing that build enable the macro again for subsequent builds; that way
 # a new akmod package will only get build when a new one is actually needed
-%global buildforkernels current
+%global buildforkernels akmod
 
-%global commitdate 20161214
-%global commit 0712f3944375108fd64fac706aae32063940c8e2
+%global commitdate 20240221
+%global commit 2b287d4f5c6059b856f33cf24e151d7c2ae06598
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-%global srcname bcwc_pcie
+%global srcname facetimehd
 %global kmodname facetimehd
 
 Name:       facetimehd-kmod
-Version:    0
+Version:    0.6.8
 Release:    1.%{commitdate}git%{shortcommit}%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
 Group:      System Environment/Kernel
 License:    GPLv2
 URL:        https://github.com/patjak/bcwc_pcie
-Source0:    https://github.com/patjak/%{srcname}/archive/%{commit}/%{srcname}-%{version}-%{shortcommit}.tar.gz
+Source:     https://github.com/patjak/%{srcname}/archive/%{commit}/%{srcname}-%{version}-%{shortcommit}.tar.gz
 
-BuildRequires:  %{_bindir}/kmodtool
+Patch:      rename_min_buffers_needed.patch
+
+Requires: facetimehd-firmware
 # kernel bug? # "Cannot generate ORC metadata for CONFIG_UNWINDER_ORC=y"
 # see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=886474
 BuildRequires:  elfutils-libelf-devel
+BuildRequires:  rpmdevtools
+BuildRequires:  kmodtool
+BuildRequires:  kernel-devel
+
 
 # needed for plague to make sure it builds for i586 and i686
 ExclusiveArch:  i686 x86_64
 # ppc disabled because broadcom only provides x86 and x86_64 bits
 
-%{!?kernels:BuildRequires: buildsys-build-rpmfusion-kerneldevpkgs-%{?buildforkernels:%{buildforkernels}}%{!?buildforkernels:current}-%{_target_cpu} }
 
 # kmodtool does its magic here
-%{expand:%(kmodtool --target %{_target_cpu} --repo rpmfusion --kmodname %{kmodname} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null | grep -v kmod-common) }
+%{expand:%(kmodtool --target %{_target_cpu} --kmodname %{name} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null) }
+
 
 %description
 Linux driver for the Facetime HD (Broadcom 1570) PCIe webcam found in recent
@@ -46,7 +54,7 @@ Macbooks.
 # print kmodtool output for debugging purposes:
 kmodtool --target %{_target_cpu}  --repo rpmfusion --kmodname %{kmodname} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null | grep -v kmod-common
 
-%setup -q -c -T -a 0
+%autosetup -c %{srcname}-main -p1
 
 for kernel_version in %{?kernel_versions} ; do
  cp -a %{srcname}-%{commit} _kmod_build_${kernel_version%%___*}
@@ -73,5 +81,8 @@ chmod 0755 $RPM_BUILD_ROOT%{kmodinstdir_prefix}*%{kmodinstdir_postfix}/* || :
 %{?akmod_install}
 
 %changelog
+* Tue Mar 19 2024 Jon Mulder <jon.e.mulder@gmail.com>
+- Updated upstream build and spec file to build
+
 * Tue Jul 26 2016 Ken Dreyer <kdreyer@redhat.com> 0-1
 - Initial build.
