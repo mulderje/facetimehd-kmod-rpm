@@ -14,6 +14,8 @@
 %global srcname facetimehd
 %global kmodname facetimehd
 
+%global _default_patch_fuzz 2
+
 Name:       facetimehd-kmod
 Version:    0.6.8
 Release:    1.%{commitdate}git%{shortcommit}%{?dist}
