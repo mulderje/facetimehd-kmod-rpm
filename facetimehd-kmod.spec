@@ -57,7 +57,7 @@ Macbooks.
 # print kmodtool output for debugging purposes:
 kmodtool --target %{_target_cpu}  --repo rpmfusion --kmodname %{kmodname} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null | grep -v kmod-common
 
-%autosetup -c -p1
+%autosetup -n %{srcname}-main -c -p1
 
 for kernel_version in %{?kernel_versions} ; do
  cp -a %{srcname}-%{commit} _kmod_build_${kernel_version%%___*}

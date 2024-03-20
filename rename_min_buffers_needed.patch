@@ -9,8 +9,8 @@ Subject: [PATCH] Rename to min_queued_buffers
 
 diff --git a/fthd_v4l2.c b/fthd_v4l2.c
 index ffd8593..6c00ee4 100644
---- a/fthd_v4l2.c
-+++ b/fthd_v4l2.c
+--- facetimehd-main/fthd_v4l2.c
++++ facetimehd-main/fthd_v4l2.c
 @@ -683,7 +683,7 @@ int fthd_v4l2_register(struct fthd_private *dev_priv)
  	q->mem_ops = &vb2_dma_sg_memops;
  	q->buf_struct_size = 0;//sizeof(struct vpif_cap_buffer);
