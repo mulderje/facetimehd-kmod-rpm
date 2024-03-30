@@ -23,8 +23,6 @@ BuildRequires:  gzip
 BuildRequires:  make
 BuildRequires:  p7zip
 
-Requires:       bash
-
 %description
 FacetimeHD firmware download and extraction tool
 
