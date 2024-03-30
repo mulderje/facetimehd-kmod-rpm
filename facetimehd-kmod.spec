@@ -21,7 +21,7 @@ Release:    1.%{commitdate}git%{shortcommit}%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
 Group:      System Environment/Kernel
 License:    GPLv2
-URL:        https://github.com/patjak/bcwc_pcie
+URL:        https://github.com/patjak/%{srcname}
 Source:     https://github.com/patjak/%{srcname}/archive/%{commit}/%{srcname}-%{version}-%{shortcommit}.tar.gz
 
 Requires: facetimehd-firmware

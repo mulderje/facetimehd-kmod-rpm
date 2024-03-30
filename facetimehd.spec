@@ -2,8 +2,8 @@
 %global debug_package %{nil}
 %endif
 
-%global commitdate 20240221
-%global commit 2b287d4f5c6059b856f33cf24e151d7c2ae06598
+%global commitdate 20240322
+%global commit b1f74242ad35f448bbac306f0087d289939290d9
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 %global srcname facetimehd
@@ -15,7 +15,7 @@ Release:    1.%{commitdate}git%{shortcommit}%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
 Group:      System Environment/Kernel
 License:    GPLv2
-URL:        https://github.com/patjak/bcwc_pcie
+URL:        https://github.com/patjak/%{srcname}
 Source:     https://github.com/patjak/%{srcname}/archive/%{commit}/%{srcname}-%{version}-%{shortcommit}.tar.gz
 
 Provides: %{name}-kmod-common = %{version}
