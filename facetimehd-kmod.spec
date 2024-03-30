@@ -7,14 +7,13 @@
 # a new akmod package will only get build when a new one is actually needed
 %global buildforkernels akmod
 
-%global commitdate 20240221
-%global commit 2b287d4f5c6059b856f33cf24e151d7c2ae06598
+%global commitdate 20240322
+%global commit b1f74242ad35f448bbac306f0087d289939290d9
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 %global srcname facetimehd
 %global kmodname facetimehd
 
-%global _default_patch_fuzz 2
 
 Name:       facetimehd-kmod
 Version:    0.6.8
@@ -24,8 +23,6 @@ Group:      System Environment/Kernel
 License:    GPLv2
 URL:        https://github.com/patjak/bcwc_pcie
 Source:     https://github.com/patjak/%{srcname}/archive/%{commit}/%{srcname}-%{version}-%{shortcommit}.tar.gz
-
-Patch:      rename_min_buffers_needed.patch
 
 Requires: facetimehd-firmware
 # kernel bug? # "Cannot generate ORC metadata for CONFIG_UNWINDER_ORC=y"
@@ -57,7 +54,7 @@ Macbooks.
 # print kmodtool output for debugging purposes:
 kmodtool --target %{_target_cpu}  --repo rpmfusion --kmodname %{kmodname} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null | grep -v kmod-common
 
-%autosetup -n %{srcname}-main -c -p1
+%autosetup -n %{srcname}-main -c
 
 for kernel_version in %{?kernel_versions} ; do
  cp -a %{srcname}-%{commit} _kmod_build_${kernel_version%%___*}
