@@ -21,6 +21,8 @@ Source:     https://github.com/patjak/%{srcname}/archive/%{commit}/%{srcname}-%{
 Provides: %{name}-kmod-common = %{version}
 Requires: %{name}-kmod >= %{version}
 
+Requires: %{name}-firmware
+
 %description
 Linux driver for the Facetime HD (Broadcom 1570) PCIe webcam found in recent
 Macbooks.
