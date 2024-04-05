@@ -1,47 +1,51 @@
-**WARNING: As of 2019, I do not have a MacBook Pro anymore. I've abandoned
-this code, and I no longer update my Yum repositories on fedorapeople.org.**
-(If you're looking for a Linux-friendly laptop, I'm really happy with my new
-Levono X1 Carbon.) 
+# facetimehd-kmod
+Spec files for building kernel module for [patjak/facetimehd](https://github.com/patjak/facetimehd/). 
 
-This is the RPM packaging for the 3rd-party `facetimehd kernel module for
-MacBook Pros <https://github.com/patjak/bcwc_pcie/>`_.
+**WARNING: this is a WIP to get the driver working on an old MacBookAir6,2. These are my first spec files, but they are building are working for me locally. This is provided as is. Contributions and suggestions for improvements  welcome.**
 
-Binary RPMs at https://ktdreyer.fedorapeople.org/macbook/
+Build process / TODOs:
 
-Using this repo
-===============
+- [x] Initially forked from [ktdreyer/facetimehd-kmod-rpm](https://github.com/ktdreyer/facetimehd-kmod-rpm)
+- [x] Update specs:
+  - [x] Remove rpmfusion
+  - [x] Update to latest git revs
+  - [x] Add spec for facetimehd-firmware
+  - [ ] Consolidate facetimehd-firmware into main spec?
+- [x] Copr created and builds
+- [ ] Contribut to ublue (WIP: ublue-os/akmods#163)
+- [ ] Best practices (Packit, Bohdi, Koji...?)
 
-To enable this Yum repository on your Fedora system, put the ``macbook.repo``
-file into ``/etc/yum.repos.d``, like so::
+## Copr Build
 
-    curl https://ktdreyer.fedorapeople.org/macbook/macbook.repo | sudo tee /etc/yum.repos.d/macbook.repo
+Package | Build Status
+------- | ------------
+facetimehd | [![badge](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/package/facetimehd/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/package/facetimehd/)
+facetimehd-kmod | [![badge](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/package/facetimehd-kmod/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/package/facetimehd-kmod/)
+facetimehd-firmware | [![badge](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/package/facetimehd-firmware/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/package/facetimehd-firmware/)
 
-Installing for your running kernel version
-==========================================
 
-To install the kmod packages for the specific kernel version you're running,
-run this DNF command as root::
+## Using `facetimehd-kmod` spec files
 
-    dnf install kmod-wl-$(uname -r) kmod-facetimehd-$(uname -r)
+To install, add the [mulderje/facetimehd-kmod](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/) COPR and install `facetimehd-kmod` via `dnf` or `rpm-ostree`.
 
-What kernel versions are available?
-===================================
+### Add copr and install with `rpm-ostree`
 
-I use a script ("``updates.py``") to build for the latest kernel in Fedora's
-`updates-testing repository
-<https://bodhi.fedoraproject.org/updates/?packages=kernel>`_.
+```
+$ sudo wget "https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/repo/fedora-$(rpm -E %fedora)/mulderje-facetimehd-kmod-fedora-$(rpm -E %fedora).repo" -O /etc/yum.repos.d/_copr_mulderje-facetimehd-kmod.repo
+$ sudo rpm-ostree install facetimehd-kmod facetimehd-firmware
+```
 
-To install the very latest kernel from Fedora's updates-testing repository on
-to your computer, run this command as root::
+### Building locally
 
-   dnf -y update --enablerepo=\*-testing
+```
+$ git clone https://github.com/mulderje/facetimehd-kmod-rpm.git
+$ cd facetimehd-kmod-rpm
 
-(... and if there is a newer Fedora kernel available, DNF will install it.)
+$ rpmbuild -ba facetimehd*.spec --define "kernels $(uname -r)" --target $(uname -m)
+$ rpmbuild -bs facetimehd*.spec --define "kernels $(uname -r)" --target $(uname -m)
 
-Refreshing the cache
-====================
+$ mkdir -p /tmp/mockbuild
+$ mock --enable-network -r fedora-rawhide-x86_64 --rebuild --resultdir=/tmp/mockbuild/ ~/rpmbuild/SRPMS/facetimehd-*.src.rpm
+$ sudo rpm-ostree install ...
+```
 
-I update this repository quite often, and sometimes DNF's local metadata cache
-will become stale. To tell DNF to refresh its cache for this repo's data::
-
-    dnf --disablerepo='*' --enablerepo=ktdreyer-macbook makecache --refresh
