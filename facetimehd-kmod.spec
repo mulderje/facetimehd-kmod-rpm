@@ -1,5 +1,7 @@
-# for some reason debug package does not work
+%if 0%{?fedora}
 %global debug_package %{nil}
+%endif
+
 # buildforkernels macro hint: when you build a new version or a new release
 # that contains bugfixes or other improvements then you must disable the
 # "buildforkernels newest" macro for just that build; immediately after

@@ -1,4 +1,6 @@
+%if 0%{?fedora}
 %global debug_package %{nil}
+%endif
 
 %global forgeurl https://github.com/patjak/facetimehd-firmware
 %global branch master
