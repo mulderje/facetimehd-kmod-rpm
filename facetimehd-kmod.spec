@@ -1,5 +1,7 @@
-# for some reason debug package does not work
+%if 0%{?fedora}
 %global debug_package %{nil}
+%endif
+
 # buildforkernels macro hint: when you build a new version or a new release
 # that contains bugfixes or other improvements then you must disable the
 # "buildforkernels newest" macro for just that build; immediately after
@@ -7,22 +9,21 @@
 # a new akmod package will only get build when a new one is actually needed
 %global buildforkernels akmod
 
-%global commitdate 20240322
-%global commit b1f74242ad35f448bbac306f0087d289939290d9
-%global shortcommit %(c=%{commit}; echo ${c:0:7})
-
 %global srcname facetimehd
 %global kmodname facetimehd
 
+%global forgeurl https://github.com/patjak/%{srcname}
+%global tag 0.6.8.1
+%forgemeta
 
-Name:       facetimehd-kmod
-Version:    0.6.8
-Release:    1.%{commitdate}git%{shortcommit}%{?dist}
+Name:       %{srcname}-kmod
+Version:    0.6.8.1
+Release:    1%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
 Group:      System Environment/Kernel
-License:    GPLv2
-URL:        https://github.com/patjak/%{srcname}
-Source:     https://github.com/patjak/%{srcname}/archive/%{commit}/%{srcname}-%{version}-%{shortcommit}.tar.gz
+License:    GPL-2.0-only
+URL:        %{forgeurl}
+Source:     %{forgesource}
 
 Requires: facetimehd-firmware
 # kernel bug? # "Cannot generate ORC metadata for CONFIG_UNWINDER_ORC=y"
@@ -54,22 +55,26 @@ Macbooks.
 # print kmodtool output for debugging purposes:
 kmodtool --target %{_target_cpu}  --repo rpmfusion --kmodname %{kmodname} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null | grep -v kmod-common
 
-%autosetup -n %{srcname}-main -c
+%forgeautosetup
+
+pushd %{_builddir}
 
 for kernel_version in %{?kernel_versions} ; do
- cp -a %{srcname}-%{commit} _kmod_build_${kernel_version%%___*}
+ cp -a %{srcname}-%{version} _kmod_build_${kernel_version%%___*}
 done
+
+popd
 
 %build
 for kernel_version in %{?kernel_versions}; do
- pushd _kmod_build_${kernel_version%%___*}
+ pushd %{_builddir}/_kmod_build_${kernel_version%%___*}
  make -C ${kernel_version##*___} M=`pwd` modules
  popd
 done
 
 %install
 for kernel_version in %{?kernel_versions}; do
- pushd _kmod_build_${kernel_version%%___*}
+ pushd %{_builddir}/_kmod_build_${kernel_version%%___*}
  mkdir -p ${RPM_BUILD_ROOT}%{kmodinstdir_prefix}${kernel_version%%___*}%{kmodinstdir_postfix}
  install -m 0755 *.ko ${RPM_BUILD_ROOT}%{kmodinstdir_prefix}${kernel_version%%___*}%{kmodinstdir_postfix}
  popd

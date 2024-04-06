@@ -1,19 +1,21 @@
+%if 0%{?fedora}
 %global debug_package %{nil}
-
-%global forgeurl https://github.com/patjak/facetimehd-firmware
-%global branch master
-%forgemeta
+%endif
 
 %global srcname facetimehd
+
+%global forgeurl https://github.com/patjak/%{srcname}-firmware
+%global branch master
+%forgemeta
 
 Name:           %{srcname}-firmware
 Version:        0.1
 Release:        1%{?dist}
 Summary:        FacetimeHD firmware download and extraction tool
 
-License:        GPLv2 
-URL:		%{forgeurl}
-Source:		%{forgesource}
+License:        GPL-2.0-only
+URL:            %{forgeurl}
+Source:         %{forgesource}
 
 BuildRequires:  bash
 BuildRequires:  coreutils
@@ -27,10 +29,7 @@ BuildRequires:  p7zip
 FacetimeHD firmware download and extraction tool
 
 %prep
-%forgeautosetup -v
-# %forgeautosetup -v
-# No -c for forgeautosetup. Need something like other specs
-# Break out forgesetup/autosetup
+%forgeautosetup
 
 %build
 %make_build FW_DIR_BASE="%{_prefix}/lib/firmware" FW_DIR="%{_prefix}/lib/firmware/%{srcname}" 

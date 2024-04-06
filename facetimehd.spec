@@ -2,21 +2,20 @@
 %global debug_package %{nil}
 %endif
 
-%global commitdate 20240322
-%global commit b1f74242ad35f448bbac306f0087d289939290d9
-%global shortcommit %(c=%{commit}; echo ${c:0:7})
-
 %global srcname facetimehd
-%global kmodname facetimehd
+
+%global forgeurl https://github.com/patjak/%{srcname}
+%global tag 0.6.8.1
+%forgemeta
 
 Name:       facetimehd
-Version:    0.6.8
-Release:    1.%{commitdate}git%{shortcommit}%{?dist}
+Version:	0.6.8.1
+Release:    1%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
 Group:      System Environment/Kernel
-License:    GPLv2
-URL:        https://github.com/patjak/%{srcname}
-Source:     https://github.com/patjak/%{srcname}/archive/%{commit}/%{srcname}-%{version}-%{shortcommit}.tar.gz
+License:    GPL-2.0-only
+URL:        %{forgeurl}
+Source:     %{forgesource}
 
 Provides: %{name}-kmod-common = %{version}
 Requires: %{name}-kmod >= %{version}
@@ -28,32 +27,21 @@ Linux driver for the Facetime HD (Broadcom 1570) PCIe webcam found in recent
 Macbooks.
 
 %prep
-%autosetup -c %{name}-main -p1
+%forgeautosetup
 
-#pwd
-#tree
-
-# Below files section taken from https://github.com/frgt10/facetimehd-dkms/blob/master/facetimehd-dkms.spec
 %install
 if [ "$RPM_BUILD_ROOT" != "/" ]; then
 	rm -rf $RPM_BUILD_ROOT
 fi
 
 mkdir -p $RPM_BUILD_ROOT/usr/src/%{name}-%{version}/
-cp -rf %{srcname}-%{commit}/* $RPM_BUILD_ROOT/usr/src/%{name}-%{version}/
+cp -rf %{_builddir}/%{srcname}-%{version}/* $RPM_BUILD_ROOT/usr/src/%{name}-%{version}
 
 mkdir -p $RPM_BUILD_ROOT/usr/share/doc/%{name}/
-cp %{srcname}-%{commit}/README.md $RPM_BUILD_ROOT/usr/share/doc/%{name}/
+cp %{_builddir}/%{srcname}-%{version}/README.md $RPM_BUILD_ROOT/usr/share/doc/%{name}/
 
 mkdir -p $RPM_BUILD_ROOT/etc/modules-load.d/
 echo -e "# Load facetimehd.ko at boot\nfacetimehd" > $RPM_BUILD_ROOT/etc/modules-load.d/facetimehd.conf
-
-#pwd
-#tree
-
-#tree $RPM_BUILD_ROOT
-#tree %{_builddir}
-#tree %{buildroot}
 
 %clean
 if [ "$RPM_BUILD_ROOT" != "/" ]; then
