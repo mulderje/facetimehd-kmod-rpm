@@ -2,11 +2,11 @@
 %global debug_package %{nil}
 %endif
 
-%global forgeurl https://github.com/patjak/facetimehd-firmware
+%global srcname facetimehd
+
+%global forgeurl https://github.com/patjak/%{srcname}-firmware
 %global branch master
 %forgemeta
-
-%global srcname facetimehd
 
 Name:           %{srcname}-firmware
 Version:        0.1
@@ -29,10 +29,7 @@ BuildRequires:  p7zip
 FacetimeHD firmware download and extraction tool
 
 %prep
-%forgeautosetup -v
-# %forgeautosetup -v
-# No -c for forgeautosetup. Need something like other specs
-# Break out forgesetup/autosetup
+%forgeautosetup
 
 %build
 %make_build FW_DIR_BASE="%{_prefix}/lib/firmware" FW_DIR="%{_prefix}/lib/firmware/%{srcname}" 
