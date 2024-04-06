@@ -14,8 +14,8 @@ Release:        1%{?dist}
 Summary:        FacetimeHD firmware download and extraction tool
 
 License:        GPL-2.0-only
-URL:		%{forgeurl}
-Source:		%{forgesource}
+URL:            %{forgeurl}
+Source:         %{forgesource}
 
 BuildRequires:  bash
 BuildRequires:  coreutils
