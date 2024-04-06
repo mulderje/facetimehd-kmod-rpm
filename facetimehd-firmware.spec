@@ -11,7 +11,7 @@ Version:        0.1
 Release:        1%{?dist}
 Summary:        FacetimeHD firmware download and extraction tool
 
-License:        GPLv2 
+License:        GPL-2.0-only
 URL:		%{forgeurl}
 Source:		%{forgesource}
 

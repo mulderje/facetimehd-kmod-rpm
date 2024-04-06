@@ -20,7 +20,7 @@ Version:    0.6.8
 Release:    1.%{commitdate}git%{shortcommit}%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
 Group:      System Environment/Kernel
-License:    GPLv2
+License:    GPL-2.0-only
 URL:        https://github.com/patjak/%{srcname}
 Source:     https://github.com/patjak/%{srcname}/archive/%{commit}/%{srcname}-%{version}-%{shortcommit}.tar.gz
 
