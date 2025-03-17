@@ -5,11 +5,11 @@
 %global srcname facetimehd
 
 %global forgeurl https://github.com/patjak/%{srcname}-firmware
-%global branch master
+%global tag v1.0.0
 %forgemeta
 
 Name:           %{srcname}-firmware
-Version:        0.1
+Version:        1.0.0
 Release:        1%{?dist}
 Summary:        FacetimeHD firmware download and extraction tool
 

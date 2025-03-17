@@ -13,11 +13,11 @@
 %global kmodname facetimehd
 
 %global forgeurl https://github.com/patjak/%{srcname}
-%global tag 0.6.8.1
+%global tag 0.6.13
 %forgemeta
 
 Name:       %{srcname}-kmod
-Version:    0.6.8.1
+Version:    %{tag}
 Release:    1%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
 Group:      System Environment/Kernel
@@ -86,6 +86,9 @@ chmod 0755 $RPM_BUILD_ROOT%{kmodinstdir_prefix}*%{kmodinstdir_postfix}/* || :
 %{?akmod_install}
 
 %changelog
+* Mon Mar 17 2025 Jon Mulder <jon.e.mulder@gmail.com>
+- Update to 0.6.13 release
+
 * Tue Mar 19 2024 Jon Mulder <jon.e.mulder@gmail.com>
 - Updated upstream build and spec file to build
 
