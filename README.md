@@ -55,14 +55,15 @@ $ sudo rpm-ostree install ...
 Copr builds are driven by [Packit](https://packit.dev) via `.packit.yaml` in
 the repo root. Two flows:
 
-| Trigger | Copr project | Purpose |
-|---|---|---|
-| Pull request | [`mulderje/facetimehd-kmod-pr`](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod-pr/) | Per-PR scratch build; Packit posts the build link as a commit status. Merge only after the PR Copr build is green. |
-| Push to `main` | [`mulderje/facetimehd-kmod`](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/) | Official build consumed by downstream images (e.g. ublue-oldair). |
+| Trigger | Copr project | Targets | Purpose |
+|---|---|---|---|
+| Pull request | [`mulderje/facetimehd-kmod-pr`](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod-pr/) | `fedora-all-x86_64` | Per-PR scratch build across every active Fedora release plus rawhide, so rawhide breakage is caught before merge. Packit posts the build link as a commit status. |
+| Push to `main` | [`mulderje/facetimehd-kmod`](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/) | `fedora-stable-x86_64` | Official build consumed by downstream images (e.g. ublue-oldair). Stable releases only — rawhide users can pull from the PR Copr. |
 
 Both flows build all three packages (`facetimehd`, `facetimehd-kmod`,
-`facetimehd-firmware`) against `fedora-41`, `fedora-42`, and
-`fedora-rawhide` on `x86_64`.
+`facetimehd-firmware`). Targets use [Packit aliases](https://packit.dev/docs/configuration/#aliases)
+so the matrix tracks Fedora's lifecycle automatically — no config bump
+when a new release branches or an old one goes EOL.
 
 ### One-time setup
 

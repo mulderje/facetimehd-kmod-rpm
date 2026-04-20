@@ -30,28 +30,26 @@ packages:
     downstream_package_name: facetimehd-firmware
 
 jobs:
-  # Per-PR scratch builds in a separate Copr project so the official Copr
-  # never sees unreviewed code.
+  # Per-PR scratch builds across every active Fedora release + rawhide so we
+  # catch rawhide breakage before it lands on main. Results land in a separate
+  # Copr project so the official Copr never sees unreviewed code.
   - job: copr_build
     trigger: pull_request
     owner: mulderje
     project: facetimehd-kmod-pr
     targets:
-      - fedora-41-x86_64
-      - fedora-42-x86_64
-      - fedora-rawhide-x86_64
+      - fedora-all-x86_64
 
   # Merges to main publish to the official Copr that ublue-oldair and
-  # downstream installs consume.
+  # downstream installs consume. Only supported stable releases ship here;
+  # rawhide users can pull from the PR Copr or build locally.
   - job: copr_build
     trigger: commit
     branch: main
     owner: mulderje
     project: facetimehd-kmod
     targets:
-      - fedora-41-x86_64
-      - fedora-42-x86_64
-      - fedora-rawhide-x86_64
+      - fedora-stable-x86_64
 
 # TODO: enable once upstream-tracking is proven stable for this kmod.
 # Upstream kernel-module releases frequently require downstream review
