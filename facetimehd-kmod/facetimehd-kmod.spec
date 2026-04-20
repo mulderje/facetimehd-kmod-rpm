@@ -18,7 +18,7 @@
 
 Name:       %{srcname}-kmod
 Version:    %{tag}
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
 License:    GPL-2.0-only
 URL:        %{forgeurl}
@@ -84,7 +84,13 @@ done
 chmod 0755 $RPM_BUILD_ROOT%{kmodinstdir_prefix}*%{kmodinstdir_postfix}/* || :
 %{?akmod_install}
 
+%post -n akmod-%{kmodname} -p /bin/bash
+/usr/sbin/akmods -q --kernels $(uname -r) --kmod %{kmodname} >/dev/null 2>&1 &
+
 %changelog
+* Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-2
+- async %post to avoid tripping akmodsbuild root guard in OCI builds
+
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Update to 0.7.0.1 release (fixes build against kernel >= 7.0)
 - Drop deprecated Group tag and stale --repo rpmfusion debug flag
