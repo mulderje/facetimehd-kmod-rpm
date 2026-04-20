@@ -71,15 +71,17 @@ jobs:
     enable_net: true
 
   # Merges to main publish to the official Copr that ublue-oldair and
-  # downstream installs consume. Only supported stable releases ship here;
-  # rawhide users can pull from the PR Copr or build locally.
+  # downstream installs consume. Matches the PR target matrix so every
+  # merged commit produces RPMs for every active Fedora release + rawhide,
+  # and the set auto-tracks Fedora's lifecycle (new release branches ->
+  # builds added; EOL release -> builds dropped).
   - job: copr_build
     trigger: commit
     branch: main
     owner: mulderje
     project: facetimehd-kmod
     targets:
-      - fedora-stable-x86_64
+      - fedora-all-x86_64
     enable_net: true
 
 # TODO: enable once upstream-tracking is proven stable for this kmod.
