@@ -54,12 +54,19 @@ jobs:
   # Per-PR scratch builds across every active Fedora release + rawhide so we
   # catch rawhide breakage before it lands on main. Results land in a separate
   # Copr project so the official Copr never sees unreviewed code.
+  #
+  # enable_net is required because facetimehd-firmware's upstream Makefile
+  # curl-downloads the driver installer from Apple at %build time. Packit
+  # defaults enable_net to False since 2022, which overrides the Copr
+  # project-level toggle; without this flag, firmware builds silently no-op
+  # the download and then fail at the extract/mv step.
   - job: copr_build
     trigger: pull_request
     owner: mulderje
     project: facetimehd-kmod-pr
     targets:
       - fedora-all-x86_64
+    enable_net: true
 
   # Merges to main publish to the official Copr that ublue-oldair and
   # downstream installs consume. Only supported stable releases ship here;
@@ -71,6 +78,7 @@ jobs:
     project: facetimehd-kmod
     targets:
       - fedora-stable-x86_64
+    enable_net: true
 
 # TODO: enable once upstream-tracking is proven stable for this kmod.
 # Upstream kernel-module releases frequently require downstream review
