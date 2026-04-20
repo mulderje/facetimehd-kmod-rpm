@@ -13,7 +13,8 @@ Build process / TODOs:
   - [ ] Consolidate facetimehd-firmware into main spec?
 - [x] Copr created and builds
 - [ ] Contribut to ublue (WIP: ublue-os/akmods#163)
-- [ ] Best practices (Packit, Bohdi, Koji...?)
+- [x] Best practices: [Packit](https://packit.dev) drives Copr builds (PR scratch + main)
+  - [ ] Enable `pull_from_upstream` once the kmod is stable across kernel majors
 
 ## Copr Build
 
@@ -49,3 +50,27 @@ $ mock --enable-network -r fedora-rawhide-x86_64 --rebuild --resultdir=/tmp/mock
 $ sudo rpm-ostree install ...
 ```
 
+## Development workflow
+
+Copr builds are driven by [Packit](https://packit.dev) via `.packit.yaml` in
+the repo root. Two flows:
+
+| Trigger | Copr project | Purpose |
+|---|---|---|
+| Pull request | [`mulderje/facetimehd-kmod-pr`](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod-pr/) | Per-PR scratch build; Packit posts the build link as a commit status. Merge only after the PR Copr build is green. |
+| Push to `main` | [`mulderje/facetimehd-kmod`](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/) | Official build consumed by downstream images (e.g. ublue-oldair). |
+
+Both flows build all three packages (`facetimehd`, `facetimehd-kmod`,
+`facetimehd-firmware`) against `fedora-41`, `fedora-42`, and
+`fedora-rawhide` on `x86_64`.
+
+### One-time setup
+
+1. Install the [Packit GitHub App](https://github.com/apps/packit-as-a-service)
+   on this repository.
+2. Create the scratch Copr project `mulderje/facetimehd-kmod-pr` with the
+   same chroots as the official project.
+3. In both Copr projects' **Settings → Permissions**, grant the
+   `packit` user `builder` access.
+4. If a GitHub → Copr webhook was previously wired directly on this repo,
+   disable it to avoid double-builds — Packit now owns the `main` trigger.

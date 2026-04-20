@@ -1,0 +1,66 @@
+# Packit configuration for facetimehd-kmod-rpm
+# https://packit.dev/docs/configuration/
+#
+# This is a monorepo containing three downstream RPM specs that build from two
+# upstream sources (patjak/facetimehd for the driver + metadata packages, and
+# patjak/facetimehd-firmware for the firmware extractor).
+#
+# Packit drives two flows:
+#   - pull_request -> scratch Copr project (mulderje/facetimehd-kmod-pr) for
+#     per-PR verification before merge.
+#   - push to main -> official Copr project (mulderje/facetimehd-kmod) whose
+#     RPMs are consumed downstream (e.g. by mulderje/ublue-oldair).
+#
+# pull_from_upstream is intentionally disabled until the build is stable
+# across the kernel versions we care about; when enabled, upstream_project_url
+# will need per-package handling (Packit currently only honors it at the
+# top level, so the firmware package's separate upstream repo is deferred).
+
+specfile_path: facetimehd-kmod.spec
+
+packages:
+  facetimehd:
+    specfile_path: facetimehd.spec
+    downstream_package_name: facetimehd
+  facetimehd-kmod:
+    specfile_path: facetimehd-kmod.spec
+    downstream_package_name: facetimehd-kmod
+  facetimehd-firmware:
+    specfile_path: facetimehd-firmware.spec
+    downstream_package_name: facetimehd-firmware
+
+jobs:
+  # Per-PR scratch builds in a separate Copr project so the official Copr
+  # never sees unreviewed code.
+  - job: copr_build
+    trigger: pull_request
+    owner: mulderje
+    project: facetimehd-kmod-pr
+    targets:
+      - fedora-41-x86_64
+      - fedora-42-x86_64
+      - fedora-rawhide-x86_64
+
+  # Merges to main publish to the official Copr that ublue-oldair and
+  # downstream installs consume.
+  - job: copr_build
+    trigger: commit
+    branch: main
+    owner: mulderje
+    project: facetimehd-kmod
+    targets:
+      - fedora-41-x86_64
+      - fedora-42-x86_64
+      - fedora-rawhide-x86_64
+
+# TODO: enable once upstream-tracking is proven stable for this kmod.
+# Upstream kernel-module releases frequently require downstream review
+# (e.g. the 0.6.13 -> 0.7.0.1 bump for kernel >= 7.0), so a fully automatic
+# sync-downstream job would likely file PRs that can't merge without manual
+# intervention anyway.
+#
+#  - job: pull_from_upstream
+#    trigger: release
+#    upstream_project_url: https://github.com/patjak/facetimehd
+#    dist_git_branches:
+#      - fedora-rawhide
