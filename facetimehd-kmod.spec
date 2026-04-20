@@ -13,14 +13,13 @@
 %global kmodname facetimehd
 
 %global forgeurl https://github.com/patjak/%{srcname}
-%global tag 0.6.13
+%global tag 0.7.0.1
 %forgemeta
 
 Name:       %{srcname}-kmod
 Version:    %{tag}
 Release:    1%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
-Group:      System Environment/Kernel
 License:    GPL-2.0-only
 URL:        %{forgeurl}
 Source:     %{forgesource}
@@ -53,7 +52,7 @@ Macbooks.
 %{?kmodtool_check}
 
 # print kmodtool output for debugging purposes:
-kmodtool --target %{_target_cpu}  --repo rpmfusion --kmodname %{kmodname} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null | grep -v kmod-common
+kmodtool --target %{_target_cpu} --kmodname %{kmodname} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null | grep -v kmod-common
 
 %forgeautosetup
 
@@ -86,6 +85,10 @@ chmod 0755 $RPM_BUILD_ROOT%{kmodinstdir_prefix}*%{kmodinstdir_postfix}/* || :
 %{?akmod_install}
 
 %changelog
+* Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
+- Update to 0.7.0.1 release (fixes build against kernel >= 7.0)
+- Drop deprecated Group tag and stale --repo rpmfusion debug flag
+
 * Mon Mar 17 2025 Jon Mulder <jon.e.mulder@gmail.com>
 - Update to 0.6.13 release
 
