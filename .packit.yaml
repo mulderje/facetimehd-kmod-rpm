@@ -27,8 +27,8 @@ packages:
     specfile_path: facetimehd.spec
     actions:
       create-archive:
-        - bash -c "curl -fsSL https://github.com/patjak/facetimehd/archive/0.7.0.1/facetimehd-0.7.0.1.tar.gz -o facetimehd/facetimehd-0.7.0.1.tar.gz"
-        - bash -c "echo facetimehd/facetimehd-0.7.0.1.tar.gz"
+        - bash -c "curl -fsSL https://github.com/patjak/facetimehd/archive/0.7.0.1/facetimehd-0.7.0.1.tar.gz -o facetimehd-0.7.0.1.tar.gz"
+        - bash -c "echo facetimehd-0.7.0.1.tar.gz"
 
   facetimehd-kmod:
     downstream_package_name: facetimehd-kmod
@@ -37,8 +37,8 @@ packages:
     specfile_path: facetimehd-kmod.spec
     actions:
       create-archive:
-        - bash -c "curl -fsSL https://github.com/patjak/facetimehd/archive/0.7.0.1/facetimehd-0.7.0.1.tar.gz -o facetimehd-kmod/facetimehd-0.7.0.1.tar.gz"
-        - bash -c "echo facetimehd-kmod/facetimehd-0.7.0.1.tar.gz"
+        - bash -c "curl -fsSL https://github.com/patjak/facetimehd/archive/0.7.0.1/facetimehd-0.7.0.1.tar.gz -o facetimehd-0.7.0.1.tar.gz"
+        - bash -c "echo facetimehd-0.7.0.1.tar.gz"
 
   facetimehd-firmware:
     downstream_package_name: facetimehd-firmware
@@ -47,8 +47,8 @@ packages:
     specfile_path: facetimehd-firmware.spec
     actions:
       create-archive:
-        - bash -c "curl -fsSL https://github.com/patjak/facetimehd-firmware/archive/v1.0.0/facetimehd-firmware-1.0.0.tar.gz -o facetimehd-firmware/facetimehd-firmware-1.0.0.tar.gz"
-        - bash -c "echo facetimehd-firmware/facetimehd-firmware-1.0.0.tar.gz"
+        - bash -c "curl -fsSL https://github.com/patjak/facetimehd-firmware/archive/v1.0.0/facetimehd-firmware-1.0.0.tar.gz -o facetimehd-firmware-1.0.0.tar.gz"
+        - bash -c "echo facetimehd-firmware-1.0.0.tar.gz"
 
 jobs:
   # Per-PR scratch builds across every active Fedora release + rawhide so we
