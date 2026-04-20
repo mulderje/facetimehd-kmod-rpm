@@ -16,24 +16,22 @@
 # will need per-package handling (Packit currently only honors it at the
 # top level, so the firmware package's separate upstream repo is deferred).
 
-specfile_path: facetimehd-kmod/facetimehd-kmod.spec
-
 packages:
   facetimehd:
-    specfile_path: facetimehd/facetimehd.spec
     downstream_package_name: facetimehd
     paths:
       - ./facetimehd
+    specfile_path: facetimehd.spec
   facetimehd-kmod:
-    specfile_path: facetimehd-kmod/facetimehd-kmod.spec
     downstream_package_name: facetimehd-kmod
     paths:
       - ./facetimehd-kmod
+    specfile_path: facetimehd-kmod.spec
   facetimehd-firmware:
-    specfile_path: facetimehd-firmware/facetimehd-firmware.spec
     downstream_package_name: facetimehd-firmware
     paths:
       - ./facetimehd-firmware
+    specfile_path: facetimehd-firmware.spec
 
 jobs:
   # Per-PR scratch builds across every active Fedora release + rawhide so we
