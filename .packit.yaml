@@ -69,6 +69,13 @@ jobs:
     targets:
       - fedora-all-x86_64
     enable_net: true
+    # SCRATCH TEST (Fedora dist-git kmodtool PR #18):
+    # Pull patched kmodtool-1.2-4.fc45 from koji scratch task so the
+    # kmodtool-generated %post for akmod-facetimehd no longer trips
+    # akmodsbuild's "-w /" root guard in OCI container layering.
+    # Remove this block once kmodtool-1.2-4 lands in stable Fedora repos.
+    additional_packages:
+      - https://kojipkgs.fedoraproject.org//work/tasks/2312/144642312/kmodtool-1.2-4.fc45.noarch.rpm
 
   # Merges to main publish to the official Copr that ublue-oldair and
   # downstream installs consume. Matches the PR target matrix so every
