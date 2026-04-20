@@ -1,0 +1,95 @@
+# Packit configuration for facetimehd-kmod-rpm
+# https://packit.dev/docs/configuration/
+#
+# This is a monorepo containing three downstream RPM specs that build from two
+# upstream sources (patjak/facetimehd for the driver + metadata packages, and
+# patjak/facetimehd-firmware for the firmware extractor). There is no source
+# code in this repo — only specs — so each package overrides Packit's default
+# "archive this repo" behavior with a create-archive action that downloads the
+# correct upstream tarball from GitHub and drops it next to the spec.
+#
+# Packit drives two flows:
+#   - pull_request -> scratch Copr project (mulderje/facetimehd-kmod-pr) for
+#     per-PR verification before merge.
+#   - push to main -> official Copr project (mulderje/facetimehd-kmod) whose
+#     RPMs are consumed downstream (e.g. by mulderje/ublue-oldair).
+#
+# pull_from_upstream is intentionally disabled until the build is stable
+# across the kernel versions we care about; when enabled, upstream_project_url
+# will need per-package handling (Packit currently only honors it at the
+# top level, so the firmware package's separate upstream repo is deferred).
+
+packages:
+  facetimehd:
+    downstream_package_name: facetimehd
+    paths:
+      - ./facetimehd
+    specfile_path: facetimehd.spec
+    actions:
+      create-archive:
+        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+
+  facetimehd-kmod:
+    downstream_package_name: facetimehd-kmod
+    paths:
+      - ./facetimehd-kmod
+    specfile_path: facetimehd-kmod.spec
+    actions:
+      create-archive:
+        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+
+  facetimehd-firmware:
+    downstream_package_name: facetimehd-firmware
+    paths:
+      - ./facetimehd-firmware
+    specfile_path: facetimehd-firmware.spec
+    actions:
+      # upstream tags this repo with a "v" prefix (e.g. v1.0.0), unlike
+      # patjak/facetimehd which doesn't, so prepend "v" to the URL path.
+      create-archive:
+        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd-firmware/archive/v${PACKIT_PROJECT_VERSION}/facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'echo "facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz"'
+
+jobs:
+  # Per-PR scratch builds across every active Fedora release + rawhide so we
+  # catch rawhide breakage before it lands on main. Results land in a separate
+  # Copr project so the official Copr never sees unreviewed code.
+  #
+  # enable_net is required because facetimehd-firmware's upstream Makefile
+  # curl-downloads the driver installer from Apple at %build time. Packit
+  # defaults enable_net to False since 2022, which overrides the Copr
+  # project-level toggle; without this flag, firmware builds silently no-op
+  # the download and then fail at the extract/mv step.
+  - job: copr_build
+    trigger: pull_request
+    owner: mulderje
+    project: facetimehd-kmod-pr
+    targets:
+      - fedora-all-x86_64
+    enable_net: true
+
+  # Merges to main publish to the official Copr that ublue-oldair and
+  # downstream installs consume. Only supported stable releases ship here;
+  # rawhide users can pull from the PR Copr or build locally.
+  - job: copr_build
+    trigger: commit
+    branch: main
+    owner: mulderje
+    project: facetimehd-kmod
+    targets:
+      - fedora-stable-x86_64
+    enable_net: true
+
+# TODO: enable once upstream-tracking is proven stable for this kmod.
+# Upstream kernel-module releases frequently require downstream review
+# (e.g. the 0.6.13 -> 0.7.0.1 bump for kernel >= 7.0), so a fully automatic
+# sync-downstream job would likely file PRs that can't merge without manual
+# intervention anyway.
+#
+#  - job: pull_from_upstream
+#    trigger: release
+#    upstream_project_url: https://github.com/patjak/facetimehd
+#    dist_git_branches:
+#      - fedora-rawhide
