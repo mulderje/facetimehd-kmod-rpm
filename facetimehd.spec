@@ -31,13 +31,16 @@ Macbooks.
 %forgeautosetup
 
 %install
-mkdir -p $RPM_BUILD_ROOT/etc/modules-load.d/
-echo -e "# Load facetimehd.ko at boot\nfacetimehd" > $RPM_BUILD_ROOT/etc/modules-load.d/facetimehd.conf
+install -d -m 0755 %{buildroot}%{_sysconfdir}/modules-load.d
+install -p -m 0644 /dev/stdin %{buildroot}%{_sysconfdir}/modules-load.d/facetimehd.conf <<'EOF'
+# Load facetimehd.ko at boot
+facetimehd
+EOF
 
 %files
 %license LICENSE
 %doc README.md
-%config /etc/modules-load.d/facetimehd.conf
+%config(noreplace) %{_sysconfdir}/modules-load.d/facetimehd.conf
 
 %changelog
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
