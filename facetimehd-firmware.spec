@@ -17,8 +17,8 @@ License:        GPL-2.0-only
 URL:            %{forgeurl}
 Source:         %{forgesource}
 
-BuildRequires:  bash
-BuildRequires:  coreutils
+BuildArch:      noarch
+
 BuildRequires:  curl
 BuildRequires:  cpio
 BuildRequires:  gzip
@@ -38,10 +38,13 @@ FacetimeHD firmware download and extraction tool
 %make_install FW_DIR_BASE="%{_prefix}/lib/firmware" FW_DIR="%{_prefix}/lib/firmware/%{srcname}" 
 
 %files
-#%license LICENSE
-#%doc README.md
+%license LICENSE
 %{_prefix}/lib/firmware/facetimehd/firmware.bin
 
 %changelog
+* Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 1.0.0-1
+- Mark package noarch; drop redundant bash/coreutils BuildRequires
+- Ship upstream LICENSE via %%license macro
+
 * Tue Mar 19 2024 Jon Mulder <jon.e.mulder@gmail.com>
 - Updated upstream build and spec file to build

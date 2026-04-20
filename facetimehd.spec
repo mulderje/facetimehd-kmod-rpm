@@ -5,17 +5,18 @@
 %global srcname facetimehd
 
 %global forgeurl https://github.com/patjak/%{srcname}
-%global tag 0.6.13
+%global tag 0.7.0.1
 %forgemeta
 
 Name:       facetimehd
 Version:    %{tag}
 Release:    1%{?dist}
 Summary:    Kernel module for FacetimeHD webcam
-Group:      System Environment/Kernel
 License:    GPL-2.0-only
 URL:        %{forgeurl}
 Source:     %{forgesource}
+
+BuildArch:  noarch
 
 Provides: %{name}-kmod-common = %{version}
 Requires: %{name}-kmod >= %{version}
@@ -30,33 +31,21 @@ Macbooks.
 %forgeautosetup
 
 %install
-if [ "$RPM_BUILD_ROOT" != "/" ]; then
-	rm -rf $RPM_BUILD_ROOT
-fi
-
-mkdir -p $RPM_BUILD_ROOT/usr/src/%{name}-%{version}/
-cp -rf %{_builddir}/%{srcname}-%{version}/* $RPM_BUILD_ROOT/usr/src/%{name}-%{version}
-
-mkdir -p $RPM_BUILD_ROOT/usr/share/doc/%{name}/
-cp %{_builddir}/%{srcname}-%{version}/README.md $RPM_BUILD_ROOT/usr/share/doc/%{name}/
-
 mkdir -p $RPM_BUILD_ROOT/etc/modules-load.d/
 echo -e "# Load facetimehd.ko at boot\nfacetimehd" > $RPM_BUILD_ROOT/etc/modules-load.d/facetimehd.conf
 
-%clean
-if [ "$RPM_BUILD_ROOT" != "/" ]; then
-	rm -rf $RPM_BUILD_ROOT
-fi
-
 %files
-#%doc openrgb-dkms-main/README.md
-#%license openrgb-dkms-main/LICENSE
-%defattr(-,root,root)
+%license LICENSE
+%doc README.md
 %config /etc/modules-load.d/facetimehd.conf
-/usr/src/%{name}-%{version}/
-/usr/share/doc/%{name}/
 
 %changelog
+* Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
+- Update to 0.7.0.1 release (fixes build against kernel >= 7.0)
+- Package upstream LICENSE and README.md via %%license/%%doc macros
+- Mark package noarch; drop deprecated Group tag and legacy %%clean cruft
+- Drop unused DKMS source tree under /usr/src
+
 * Mon Mar 17 2025 Jon Mulder <jon.e.mulder@gmail.com>
 - Update to 0.6.13 release
 
