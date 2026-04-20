@@ -3,7 +3,10 @@
 #
 # This is a monorepo containing three downstream RPM specs that build from two
 # upstream sources (patjak/facetimehd for the driver + metadata packages, and
-# patjak/facetimehd-firmware for the firmware extractor).
+# patjak/facetimehd-firmware for the firmware extractor). There is no source
+# code in this repo — only specs — so each package overrides Packit's default
+# "archive this repo" behavior with a create-archive action that downloads the
+# correct upstream tarball from GitHub and drops it next to the spec.
 #
 # Packit drives two flows:
 #   - pull_request -> scratch Copr project (mulderje/facetimehd-kmod-pr) for
@@ -22,16 +25,30 @@ packages:
     paths:
       - ./facetimehd
     specfile_path: facetimehd.spec
+    actions:
+      create-archive:
+        - bash -c "curl -fsSL https://github.com/patjak/facetimehd/archive/0.7.0.1/facetimehd-0.7.0.1.tar.gz -o facetimehd/facetimehd-0.7.0.1.tar.gz"
+        - bash -c "echo facetimehd/facetimehd-0.7.0.1.tar.gz"
+
   facetimehd-kmod:
     downstream_package_name: facetimehd-kmod
     paths:
       - ./facetimehd-kmod
     specfile_path: facetimehd-kmod.spec
+    actions:
+      create-archive:
+        - bash -c "curl -fsSL https://github.com/patjak/facetimehd/archive/0.7.0.1/facetimehd-0.7.0.1.tar.gz -o facetimehd-kmod/facetimehd-0.7.0.1.tar.gz"
+        - bash -c "echo facetimehd-kmod/facetimehd-0.7.0.1.tar.gz"
+
   facetimehd-firmware:
     downstream_package_name: facetimehd-firmware
     paths:
       - ./facetimehd-firmware
     specfile_path: facetimehd-firmware.spec
+    actions:
+      create-archive:
+        - bash -c "curl -fsSL https://github.com/patjak/facetimehd-firmware/archive/v1.0.0/facetimehd-firmware-1.0.0.tar.gz -o facetimehd-firmware/facetimehd-firmware-1.0.0.tar.gz"
+        - bash -c "echo facetimehd-firmware/facetimehd-firmware-1.0.0.tar.gz"
 
 jobs:
   # Per-PR scratch builds across every active Fedora release + rawhide so we
