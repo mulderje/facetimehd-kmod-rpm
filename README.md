@@ -36,14 +36,25 @@ $ sudo wget "https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/re
 $ sudo rpm-ostree install facetimehd-kmod facetimehd-firmware
 ```
 
+### Repo layout
+
+Each package lives in its own subdirectory so Packit/Copr can build them
+independently (see `.packit.yaml`):
+
+```
+facetimehd/           facetimehd.spec
+facetimehd-kmod/      facetimehd-kmod.spec
+facetimehd-firmware/  facetimehd-firmware.spec
+```
+
 ### Building locally
 
 ```
 $ git clone https://github.com/mulderje/facetimehd-kmod-rpm.git
 $ cd facetimehd-kmod-rpm
 
-$ rpmbuild -ba facetimehd*.spec --define "kernels $(uname -r)" --target $(uname -m)
-$ rpmbuild -bs facetimehd*.spec --define "kernels $(uname -r)" --target $(uname -m)
+$ rpmbuild -ba */*.spec --define "kernels $(uname -r)" --target $(uname -m)
+$ rpmbuild -bs */*.spec --define "kernels $(uname -r)" --target $(uname -m)
 
 $ mkdir -p /tmp/mockbuild
 $ mock --enable-network -r fedora-rawhide-x86_64 --rebuild --resultdir=/tmp/mockbuild/ ~/rpmbuild/SRPMS/facetimehd-*.src.rpm
