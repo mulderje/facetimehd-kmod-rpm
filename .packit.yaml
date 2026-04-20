@@ -27,8 +27,8 @@ packages:
     specfile_path: facetimehd.spec
     actions:
       create-archive:
-        - bash -c "curl -fsSL https://github.com/patjak/facetimehd/archive/0.7.0.1/facetimehd-0.7.0.1.tar.gz -o facetimehd-0.7.0.1.tar.gz"
-        - bash -c "echo facetimehd-0.7.0.1.tar.gz"
+        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
 
   facetimehd-kmod:
     downstream_package_name: facetimehd-kmod
@@ -37,8 +37,8 @@ packages:
     specfile_path: facetimehd-kmod.spec
     actions:
       create-archive:
-        - bash -c "curl -fsSL https://github.com/patjak/facetimehd/archive/0.7.0.1/facetimehd-0.7.0.1.tar.gz -o facetimehd-0.7.0.1.tar.gz"
-        - bash -c "echo facetimehd-0.7.0.1.tar.gz"
+        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
 
   facetimehd-firmware:
     downstream_package_name: facetimehd-firmware
@@ -46,9 +46,11 @@ packages:
       - ./facetimehd-firmware
     specfile_path: facetimehd-firmware.spec
     actions:
+      # upstream tags this repo with a "v" prefix (e.g. v1.0.0), unlike
+      # patjak/facetimehd which doesn't, so prepend "v" to the URL path.
       create-archive:
-        - bash -c "curl -fsSL https://github.com/patjak/facetimehd-firmware/archive/v1.0.0/facetimehd-firmware-1.0.0.tar.gz -o facetimehd-firmware-1.0.0.tar.gz"
-        - bash -c "echo facetimehd-firmware-1.0.0.tar.gz"
+        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd-firmware/archive/v${PACKIT_PROJECT_VERSION}/facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'echo "facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz"'
 
 jobs:
   # Per-PR scratch builds across every active Fedora release + rawhide so we
