@@ -95,4 +95,18 @@ run "main time out" 'merge\n' 'pending\n'
 [ "$rc" != 0 ] || fail "main time out: exit 0"
 calls | grep -qF 'did not finish in time' || fail "main time out: no comment"
 
+# (h) pipeline test: the gate closed the PR with the passed marker; success, main never checked
+run "smoke" 'close\n' 'ok\n'
+printf '{"comments":[{"body":"x <!-- bump-gate:smoke-passed:headsha1 -->"}]}' > "$tmp/comments.json"
+echo CLOSED > "$tmp/state"
+set +e
+( cd "$tmp/repo" && env PATH="$tmp/bin:$PATH" GH_CALLS="$tmp/calls" EVENTS="$tmp/events" \
+    GH_STATE_FILE="$tmp/state" GH_COMMENTS="$tmp/comments.json" GATE_PLAN="$tmp/gate_plan" \
+    WATCHDOG_PLAN="$tmp/wd_plan" GATE_SCRIPT="$tmp/fake-gate.sh" WATCHDOG_SCRIPT="$tmp/fake-watchdog.sh" \
+    REPO=o/r OWNER=mulderje RUN_URL=x POLL_SECONDS=0 MAX_POLLS=4 bash "$here/bump-chain.sh" 15 ) > "$tmp/out" 2>&1
+rc=$?
+set -e
+[ "$rc" = 0 ] || { cat "$tmp/out"; fail "smoke: exit $rc"; }
+[ "$(count watchdog)" = 0 ] || fail "smoke: watchdog ran"
+
 echo PASS

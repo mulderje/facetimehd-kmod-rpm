@@ -6,7 +6,10 @@
 # Without it (scheduled sweep or manual dispatch) every open bot PR is. The sweep exists
 # because check_run events are not delivered for PRs opened with the workflow token.
 #
-# Environment: GH_TOKEN, REPO, OWNER, SIGNOFF, optional SHA and RUN_URL. Needs gh and jq.
+# With SMOKE=true (a forced pipeline test) a green PR is closed and its branch deleted
+# instead of merged, so tests leave nothing on main.
+#
+# Environment: GH_TOKEN, REPO, OWNER, SIGNOFF, optional SHA, SMOKE and RUN_URL. Needs gh and jq.
 # Decision logic: pr-gate.sh (tested by test-pr-gate.sh).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
@@ -15,7 +18,7 @@ RUN_URL=${RUN_URL:-}
 export SHA=${SHA:-}
 
 bot_prs='.[] | select(.state == "open")
-             | select(.user.login == "github-actions[bot]")
+             | select(.user.login | endswith("[bot]"))
              | select(.head.ref | test("^(bump|revert)/"))'
 if [ -n "$SHA" ]; then
     candidates=$(gh api "repos/$REPO/commits/$SHA/pulls" \
@@ -64,6 +67,11 @@ while read -r n sha <&3; do
             state=$(gh pr view "$n" --json state --jq .state </dev/null || true)
             if [ "$state" = "MERGED" ]; then
                 echo "PR #$n: already merged"
+                continue
+            fi
+            if [ "${SMOKE:-}" = "true" ]; then
+                gh pr close "$n" --delete-branch --comment "Pipeline test passed: all Packit builds are green. Closed without merging. Workflow run: $RUN_URL
+<!-- bump-gate:smoke-passed:$sha -->" </dev/null
                 continue
             fi
             title=$(gh pr view "$n" --json title --jq .title </dev/null)
