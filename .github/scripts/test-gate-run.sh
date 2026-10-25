@@ -97,4 +97,9 @@ run "smoke" SMOKE=true
 calls | grep -qF 'gh pr close 22 --delete-branch' || { calls; fail "smoke: not closed with branch deleted"; }
 calls | grep -qF 'bump-gate:smoke-passed:ddddddd4' || fail "smoke: marker missing"
 
+# (l) a ci-test label alone makes it a pipeline test, even from an event run without SMOKE
+run "label smoke" GH_LABELS=ci-test
+! calls | grep -q 'pr merge' || fail "label smoke: merged"
+calls | grep -qF 'gh pr close 22 --delete-branch' || fail "label smoke: not closed"
+
 echo PASS
