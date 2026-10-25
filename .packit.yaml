@@ -19,13 +19,13 @@ packages:
   facetimehd-firmware:
     upstream_project_url: https://github.com-firmware
     upstream_package_name: facetimehd-firmware
-    upstream_tag_template: "{version}"
+    upstream_tag_template: "v{version}"
     specfile_path: facetimehd-firmware/facetimehd-firmware.spec
     files_to_sync:
       - facetimehd-firmware/facetimehd-firmware.spec
 
 jobs:
-  # 1. Independent upstream release polling
+  # 1. Independent upstream release polling across the distinct repos
   - job: propose_downstream
     trigger: release
     packages: [facetimehd, facetimehd-kmod, facetimehd-firmware]
@@ -34,7 +34,6 @@ jobs:
   - job: copr_build
     trigger: pull_request
     packages: [facetimehd, facetimehd-kmod, facetimehd-firmware]
-    project: mulderje/facetimehd-kmod-pr
     enable_net: true
     targets:
       - fedora-all-x86_64
@@ -47,4 +46,4 @@ jobs:
     project: mulderje/facetimehd-kmod
     enable_net: true
     targets:
-      - fedora-stable-x86_64
+      - fedora-all-x86_64
