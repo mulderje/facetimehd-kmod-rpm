@@ -78,6 +78,9 @@ jobs:
     targets:
       - fedora-all-x86_64
     enable_net: true
+    # OpenScanHub builds the baseline SRPM in its own chroot without network, so the
+    # firmware's build-time download always fails there.
+    osh_diff_scan_after_copr_build: false
 
   # Merges to main publish to the official Copr consumed by ublue-oldair.
   - job: copr_build
