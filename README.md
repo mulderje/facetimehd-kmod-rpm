@@ -14,7 +14,8 @@ Build process / TODOs:
 - [x] Copr created and builds
 - [ ] Contribut to ublue (WIP: ublue-os/akmods#163)
 - [x] Best practices: [Packit](https://packit.dev) drives Copr builds (PR scratch + main)
-  - [ ] Enable `pull_from_upstream` once the kmod is stable across kernel majors
+  - [x] New upstream tags open bump PRs via `.github/workflows/upstream-bump.yml` (Packit's release jobs only target Fedora dist-git, so they are not used here)
+  - Packit builds each PR in [mulderje/facetimehd-kmod-pr](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod-pr/) and each push to `main` in [mulderje/facetimehd-kmod](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/)
 
 ## Copr Build
 
