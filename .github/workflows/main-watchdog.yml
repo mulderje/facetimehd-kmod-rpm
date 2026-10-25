@@ -107,7 +107,9 @@ jobs:
 
           This PR merges itself once its own Packit builds pass. The next daily upstream-bump run opens a new bump PR, which must pass its builds again before it merges.
 
-          Workflow run: $RUN_URL")
+          Workflow run: $RUN_URL
+
+          Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>")
           gh pr comment "$pr" --body "Packit builds of \`${SHA:0:7}\` on main failed, so it is being reverted in $revert_pr.
 
           $failures
