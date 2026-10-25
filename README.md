@@ -18,6 +18,13 @@ Build process / TODOs:
   - Packit builds each PR in [mulderje/facetimehd-kmod-pr](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod-pr/) and each push to `main` in [mulderje/facetimehd-kmod](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/)
   - Bump PRs merge themselves once all Packit builds pass (`.github/workflows/bump-merge.yml`). The kmod build compiles the driver against the newest `kernel-devel` in `%check`, so a green build means it compiles. If the `main` builds of a bump fail, `.github/workflows/main-watchdog.yml` opens a revert PR and comments why; the next daily bump retries
 
+## Known issues and follow-ups
+
+- The OpenScanHub diff scan for `facetimehd-firmware` ends neutral on rawhide: OSH builds the baseline SRPM in a chroot without network, and the firmware's `%build` downloads Apple's driver. It is harmless (the auto-merge gate ignores `osh-diff-scan:*`); a fix is still to be found. (Issues are disabled on this repo, so it is tracked here.)
+- Copr's FedoraReview step reports "No disttag found" for `facetimehd-kmod` because `kmodtool` names the binary packages `akmod-facetimehd` and `kmod-facetimehd`, not after the source package. It does not fail the build and is a Copr project setting.
+- The driver optionally loads sensor calibration "set files" (`facetimehd/NNNN_01XX.dat`). They are not packaged: `facetimehd-firmware` v1.0.0 does not provide them, and upstream `master` (firmware 5.60.0 plus all eleven set files) has no release tag yet.
+- `bump-merge.yml` and `main-watchdog.yml` have been tested with fixtures but have not run on a real bump yet; the first upstream tag after 0.7.2 will be their first live run.
+
 ## Copr Build
 
 Package | Build Status

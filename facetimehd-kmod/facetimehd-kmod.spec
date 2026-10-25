@@ -28,7 +28,6 @@ Requires: facetimehd-firmware
 # see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=886474
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:	gcc
-BuildRequires:  rpmdevtools
 BuildRequires:  kmodtool
 # only the akmod SRPM build (e.g. Copr) needs kernel-devel, for the %%check compile test;
 # akmods supplies it itself when it rebuilds with 'kernels' defined
@@ -79,9 +78,6 @@ for kernel_version in %{?kernel_versions}; do
  popd
 done
 
-# TODO: also /etc/modules-load.d/facetimehd.conf
-
-chmod 0755 $RPM_BUILD_ROOT%{kmodinstdir_prefix}*%{kmodinstdir_postfix}/* || :
 %{?akmod_install}
 
 %check
@@ -103,6 +99,7 @@ make -C "${kdir}" M="${PWD}" modules
 - Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
 - Document akmod-only kmodtool usage and pass %%{kmodname} consistently
 - Compile-test the module against the newest kernel-devel in %%check (akmod SRPM builds only)
+- Drop unused rpmdevtools BuildRequires, stale TODO and redundant chmod (modules are installed 0755)
 
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Update to 0.7.0.1 release (fixes build against kernel >= 7.0)
