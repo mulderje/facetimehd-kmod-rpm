@@ -26,9 +26,11 @@ packages:
       - ./facetimehd
     specfile_path: facetimehd.spec
     actions:
+      # Fetch the tarball named by the spec's Source0 (via %forgesource) instead of
+      # hardcoding URLs; the last stdout line must be the archive file name.
       create-archive:
-        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
-        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - "bash -c 'spectool -g facetimehd.spec >&2'"
+        - "bash -c 'spectool -l facetimehd.spec | grep -m1 ^Source0: | rev | cut -d/ -f1 | rev'"
 
   facetimehd-kmod:
     downstream_package_name: facetimehd-kmod
@@ -36,9 +38,11 @@ packages:
       - ./facetimehd-kmod
     specfile_path: facetimehd-kmod.spec
     actions:
+      # Fetch the tarball named by the spec's Source0 (via %forgesource) instead of
+      # hardcoding URLs; the last stdout line must be the archive file name.
       create-archive:
-        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
-        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - "bash -c 'spectool -g facetimehd-kmod.spec >&2'"
+        - "bash -c 'spectool -l facetimehd-kmod.spec | grep -m1 ^Source0: | rev | cut -d/ -f1 | rev'"
 
   facetimehd-firmware:
     downstream_package_name: facetimehd-firmware
@@ -46,52 +50,51 @@ packages:
       - ./facetimehd-firmware
     specfile_path: facetimehd-firmware.spec
     actions:
-      # upstream tags this repo with a "v" prefix (e.g. v1.0.0), unlike
-      # patjak/facetimehd which doesn't, so prepend "v" to the URL path.
+      # Fetch the tarball named by the spec's Source0 (via %forgesource) instead of
+      # hardcoding URLs; the last stdout line must be the archive file name.
       create-archive:
-        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd-firmware/archive/v${PACKIT_PROJECT_VERSION}/facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz"'
-        - bash -c 'echo "facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - "bash -c 'spectool -g facetimehd-firmware.spec >&2'"
+        - "bash -c 'spectool -l facetimehd-firmware.spec | grep -m1 ^Source0: | rev | cut -d/ -f1 | rev'"
 
 jobs:
-  # Per-PR scratch builds across every active Fedora release + rawhide so we
-  # catch rawhide breakage before it lands on main. Results land in a separate
-  # Copr project so the official Copr never sees unreviewed code.
-  #
-  # enable_net is required because facetimehd-firmware's upstream Makefile
-  # curl-downloads the driver installer from Apple at %build time. Packit
-  # defaults enable_net to False since 2022, which overrides the Copr
-  # project-level toggle; without this flag, firmware builds silently no-op
-  # the download and then fail at the extract/mv step.
+  # Per-PR scratch builds in a separate Copr project so the official Copr never
+  # sees unreviewed code. Targets track Fedora's lifecycle (fedora-all) incl. rawhide.
   - job: copr_build
     trigger: pull_request
+    packages: [facetimehd, facetimehd-kmod]
+    owner: mulderje
+    project: facetimehd-kmod-pr
+    targets:
+      - fedora-all-x86_64
+
+  # enable_net is only needed by facetimehd-firmware: its upstream Makefile
+  # curl-downloads the driver installer from Apple at %build time. Packit defaults
+  # enable_net to False, which overrides the Copr project-level toggle.
+  - job: copr_build
+    trigger: pull_request
+    packages: [facetimehd-firmware]
     owner: mulderje
     project: facetimehd-kmod-pr
     targets:
       - fedora-all-x86_64
     enable_net: true
 
-  # Merges to main publish to the official Copr that ublue-oldair and
-  # downstream installs consume. Matches the PR target matrix so every
-  # merged commit produces RPMs for every active Fedora release + rawhide,
-  # and the set auto-tracks Fedora's lifecycle (new release branches ->
-  # builds added; EOL release -> builds dropped).
+  # Merges to main publish to the official Copr consumed by ublue-oldair.
   - job: copr_build
     trigger: commit
     branch: main
+    packages: [facetimehd, facetimehd-kmod]
+    owner: mulderje
+    project: facetimehd-kmod
+    targets:
+      - fedora-all-x86_64
+
+  - job: copr_build
+    trigger: commit
+    branch: main
+    packages: [facetimehd-firmware]
     owner: mulderje
     project: facetimehd-kmod
     targets:
       - fedora-all-x86_64
     enable_net: true
-
-# TODO: enable once upstream-tracking is proven stable for this kmod.
-# Upstream kernel-module releases frequently require downstream review
-# (e.g. the 0.6.13 -> 0.7.0.1 bump for kernel >= 7.0), so a fully automatic
-# sync-downstream job would likely file PRs that can't merge without manual
-# intervention anyway.
-#
-#  - job: pull_from_upstream
-#    trigger: release
-#    upstream_project_url: https://github.com/patjak/facetimehd
-#    dist_git_branches:
-#      - fedora-rawhide
