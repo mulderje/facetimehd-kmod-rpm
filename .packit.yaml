@@ -1,49 +1,96 @@
-# .packit.yaml
+# Packit configuration for facetimehd-kmod-rpm
+# https://packit.dev/docs/configuration/
+#
+# This is a monorepo containing three downstream RPM specs that build from two
+# upstream sources (patjak/facetimehd for the driver + metadata packages, and
+# patjak/facetimehd-firmware for the firmware extractor). There is no source
+# code in this repo — only specs — so each package overrides Packit's default
+# "archive this repo" behavior with a create-archive action that downloads the
+# correct upstream tarball from GitHub and drops it next to the spec.
+#
+# Packit drives two flows:
+#   - pull_request -> scratch Copr project (mulderje/facetimehd-kmod-pr) for
+#     per-PR verification before merge.
+#   - push to main -> official Copr project (mulderje/facetimehd-kmod) whose
+#     RPMs are consumed downstream (e.g. by mulderje/ublue-oldair).
+#
+# pull_from_upstream is intentionally disabled until the build is stable
+# across the kernel versions we care about; when enabled, upstream_project_url
+# will need per-package handling (Packit currently only honors it at the
+# top level, so the firmware package's separate upstream repo is deferred).
+
 packages:
   facetimehd:
-    upstream_project_url: https://github.com/patjak/facetimehd
-    upstream_package_name: facetimehd
-    upstream_tag_template: "{version}"
-    specfile_path: facetimehd/facetimehd.spec
-    files_to_sync:
-      - facetimehd/facetimehd.spec
+    downstream_package_name: facetimehd
+    paths:
+      - ./facetimehd
+    specfile_path: facetimehd.spec
+    actions:
+      create-archive:
+        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
 
   facetimehd-kmod:
-    upstream_project_url: https://github.com/patjak/facetimehd
-    upstream_package_name: facetimehd-kmod
-    upstream_tag_template: "{version}"
-    specfile_path: facetimehd-kmod/facetimehd-kmod.spec
-    files_to_sync:
-      - facetimehd-kmod/facetimehd-kmod.spec
+    downstream_package_name: facetimehd-kmod
+    paths:
+      - ./facetimehd-kmod
+    specfile_path: facetimehd-kmod.spec
+    actions:
+      create-archive:
+        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
 
   facetimehd-firmware:
-    upstream_project_url: https://github.com/patjak/facetimehd-firmware
-    upstream_package_name: facetimehd-firmware
-    upstream_tag_template: "v{version}"
-    specfile_path: facetimehd-firmware/facetimehd-firmware.spec
-    files_to_sync:
-      - facetimehd-firmware/facetimehd-firmware.spec
+    downstream_package_name: facetimehd-firmware
+    paths:
+      - ./facetimehd-firmware
+    specfile_path: facetimehd-firmware.spec
+    actions:
+      # upstream tags this repo with a "v" prefix (e.g. v1.0.0), unlike
+      # patjak/facetimehd which doesn't, so prepend "v" to the URL path.
+      create-archive:
+        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd-firmware/archive/v${PACKIT_PROJECT_VERSION}/facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'echo "facetimehd-firmware-${PACKIT_PROJECT_VERSION}.tar.gz"'
 
 jobs:
-  # 1. Independent upstream release polling across the distinct repos
-  - job: propose_downstream
-    trigger: release
-    packages: [facetimehd, facetimehd-kmod, facetimehd-firmware]
-
-  # 2. PR Scratch Builds restricted to x86_64 with network access enabled
+  # Per-PR scratch builds in a separate Copr project so the official Copr never
+  # sees unreviewed code. Targets track Fedora's lifecycle (fedora-all) incl. rawhide.
   - job: copr_build
     trigger: pull_request
-    packages: [facetimehd, facetimehd-kmod, facetimehd-firmware]
-    enable_net: true
+    packages: [facetimehd, facetimehd-kmod]
+    owner: mulderje
+    project: facetimehd-kmod-pr
     targets:
       - fedora-all-x86_64
 
-  # 3. Stable Production Builds restricted to x86_64 with network access enabled
+  # enable_net is only needed by facetimehd-firmware: its upstream Makefile
+  # curl-downloads the driver installer from Apple at %build time. Packit defaults
+  # enable_net to False, which overrides the Copr project-level toggle.
+  - job: copr_build
+    trigger: pull_request
+    packages: [facetimehd-firmware]
+    owner: mulderje
+    project: facetimehd-kmod-pr
+    targets:
+      - fedora-all-x86_64
+    enable_net: true
+
+  # Merges to main publish to the official Copr consumed by ublue-oldair.
   - job: copr_build
     trigger: commit
     branch: main
-    packages: [facetimehd, facetimehd-kmod, facetimehd-firmware]
-    project: mulderje/facetimehd-kmod
-    enable_net: true
+    packages: [facetimehd, facetimehd-kmod]
+    owner: mulderje
+    project: facetimehd-kmod
     targets:
       - fedora-all-x86_64
+
+  - job: copr_build
+    trigger: commit
+    branch: main
+    packages: [facetimehd-firmware]
+    owner: mulderje
+    project: facetimehd-kmod
+    targets:
+      - fedora-all-x86_64
+    enable_net: true
