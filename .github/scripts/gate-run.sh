@@ -68,7 +68,7 @@ while read -r n sha <&3; do
             fi
             title=$(gh pr view "$n" --json title --jq .title </dev/null)
             body=$(printf 'Merged automatically after all Packit builds passed.\n\n%s' "$SIGNOFF")
-            if gh pr merge "$n" --squash --subject "$title (#$n)" --body "$body" </dev/null; then
+            if gh pr merge "$n" --squash --delete-branch --subject "$title (#$n)" --body "$body" </dev/null; then
                 gh pr comment "$n" --body "Merged after all Packit builds passed. Workflow run: $RUN_URL" </dev/null
             else
                 # Another run (a sweep, the bump workflow) may have merged it in the meantime

@@ -39,7 +39,7 @@ printf '%s' '{"comments":[]}' > "$tmp/comments.json"
 # (a) sweep, all builds green: only the bot's bump PR is merged, with sign-off
 printf '%s' "$checks_json" > "$tmp/checks.json"
 run "green sweep"
-calls | grep -qF 'gh pr merge 15 --squash --subject Update facetimehd to 0.7.3 (#15)' || { calls; fail "green sweep: PR 15 not merged with subject"; }
+calls | grep -qF 'gh pr merge 15 --squash --delete-branch --subject Update facetimehd to 0.7.3 (#15)' || { calls; fail "green sweep: PR 15 not merged with subject"; }
 calls | grep -qF 'Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>' || fail "green sweep: sign-off trailer missing"
 ! calls | grep -qE 'pr merge (20|21)' || fail "green sweep: merged a PR that is not the bot's bump"
 
