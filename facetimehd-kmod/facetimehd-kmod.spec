@@ -2,11 +2,10 @@
 %global debug_package %{nil}
 %endif
 
-# buildforkernels macro hint: when you build a new version or a new release
-# that contains bugfixes or other improvements then you must disable the
-# "buildforkernels newest" macro for just that build; immediately after
-# queuing that build enable the macro again for subsequent builds; that way
-# a new akmod package will only get build when a new one is actually needed
+# akmod-only: kmodtool generates the akmod-facetimehd and kmod-facetimehd
+# packages from the macro call below, so they are not defined by hand here.
+# The other kmodtool modes (current, newest) need RPM Fusion's
+# buildsys-build-<repo>-kerneldevpkgs and cannot be built on Copr.
 %global buildforkernels akmod
 
 %global srcname facetimehd
@@ -39,7 +38,7 @@ ExclusiveArch:  x86_64
 
 
 # kmodtool does its magic here
-%{expand:%(kmodtool --target %{_target_cpu} --kmodname %{name} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null) }
+%{expand:%(kmodtool --target %{_target_cpu} --kmodname %{kmodname} %{?buildforkernels:--%{buildforkernels}} %{?kernels:--for-kernels "%{?kernels}"} 2>/dev/null) }
 
 
 %description
@@ -86,6 +85,7 @@ chmod 0755 $RPM_BUILD_ROOT%{kmodinstdir_prefix}*%{kmodinstdir_postfix}/* || :
 %changelog
 * Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
+- Document akmod-only kmodtool usage and pass %%{kmodname} consistently
 
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Update to 0.7.0.1 release (fixes build against kernel >= 7.0)

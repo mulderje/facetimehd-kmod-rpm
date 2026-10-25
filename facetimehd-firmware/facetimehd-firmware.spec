@@ -24,7 +24,7 @@ BuildRequires:  curl
 BuildRequires:  cpio
 BuildRequires:  gzip
 BuildRequires:  make
-BuildRequires:  p7zip
+BuildRequires:  xz
 
 %description
 FacetimeHD firmware download and extraction tool
@@ -45,6 +45,7 @@ FacetimeHD firmware download and extraction tool
 %changelog
 * Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 1.0.0-1
 - Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
+- Drop unneeded p7zip BuildRequires (7z is only used for the unused DMG path); add xz for xzcat
 
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 1.0.0-1
 - Mark package noarch; drop redundant bash/coreutils BuildRequires
