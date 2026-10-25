@@ -71,6 +71,12 @@ while read -r n sha <&3; do
             if gh pr merge "$n" --squash --delete-branch --subject "$title (#$n)" --body "$body" </dev/null; then
                 gh pr comment "$n" --body "Merged after all Packit builds passed. Workflow run: $RUN_URL" </dev/null
             else
+                # Another run (a sweep, the bump workflow) may have merged it in the meantime
+                state=$(gh pr view "$n" --json state --jq .state </dev/null || true)
+                if [ "$state" = "MERGED" ]; then
+                    echo "PR #$n: merged by another run"
+                    continue
+                fi
                 marker="<!-- bump-gate:merge-failed:$sha -->"
                 if ! gh pr view "$n" --json comments --jq '.comments[].body' </dev/null | grep -qF "$marker"; then
                     gh pr comment "$n" --body "@$OWNER All Packit builds passed but the merge failed (conflict or branch rules), so it needs a manual merge. Workflow run: $RUN_URL

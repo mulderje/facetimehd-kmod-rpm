@@ -79,4 +79,9 @@ calls | grep -qF 'the merge failed' || fail "merge failure: not reported"
 run "already merged" GH_PR_STATE=MERGED
 ! calls | grep -qE 'pr (merge|comment)' || fail "already merged: acted"
 
+# (i) our merge fails because another run merged it between the two state checks
+printf 'OPEN\nMERGED\n' > "$tmp/state"
+run "merge race" GH_MERGE_RC=1 GH_STATE_FILE="$tmp/state"
+! calls | grep -qF 'the merge failed' || fail "merge race: reported a failure for a PR that was merged"
+
 echo PASS

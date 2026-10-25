@@ -7,6 +7,8 @@
 #   GH_CHECKS        JSON object {check_runs: [...]} served for .../check-runs
 #   GH_COMMENTS      JSON object {comments: [...]} for "gh pr view --json comments"
 #   GH_MERGE_RC      exit status of "gh pr merge" (default 0)
+#   GH_STATE_FILE    lines served, one per call, for "gh pr view --json state" (else GH_PR_STATE)
+#   GH_HEAD, GH_MERGE_SHA  served for headRefOid and mergeCommit
 set -uo pipefail
 {
     echo "gh $*"
@@ -37,7 +39,16 @@ case "${1:-} ${2:-}" in
         case "$*" in
             *"--json comments"*) jq -r "$jq_expr" "$GH_COMMENTS" ;;
             *"--json title"*)    echo "Update facetimehd to 0.7.3" ;;
-            *"--json state"*)    echo "${GH_PR_STATE:-OPEN}" ;;
+            *"--json state"*)
+                if [ -n "${GH_STATE_FILE:-}" ]; then
+                    head -n 1 "$GH_STATE_FILE"
+                    # several lines: each call consumes one, the last one repeats
+                    [ "$(wc -l < "$GH_STATE_FILE")" -gt 1 ] && sed -i 1d "$GH_STATE_FILE"
+                else
+                    echo "${GH_PR_STATE:-OPEN}"
+                fi ;;
+            *"--json headRefOid"*) echo "${GH_HEAD:-headsha1}" ;;
+            *"--json mergeCommit"*) echo "${GH_MERGE_SHA:-mergesha1}" ;;
         esac
         ;;
     "pr merge")  exit "${GH_MERGE_RC:-0}" ;;
