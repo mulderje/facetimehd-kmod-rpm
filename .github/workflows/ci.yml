@@ -2,10 +2,19 @@
 # RPM builds are tested by Packit on Copr, not here.
 name: CI
 
+# Only the files these checks cover trigger a run. Bump and revert PRs, which the bot opens
+# and which only touch spec files, therefore never create a run: GitHub holds workflow runs
+# from github-actions[bot] PRs for manual approval, and nothing here needs to run for them.
 on:
   pull_request:
+    paths:
+      - ".github/**"
+      - ".packit.yaml"
   push:
     branches: [main]
+    paths:
+      - ".github/**"
+      - ".packit.yaml"
 
 permissions:
   contents: read
