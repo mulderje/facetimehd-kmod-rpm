@@ -16,6 +16,7 @@ Build process / TODOs:
 - [x] Best practices: [Packit](https://packit.dev) drives Copr builds (PR scratch + main)
   - [x] New upstream tags open bump PRs via `.github/workflows/upstream-bump.yml` (Packit's release jobs only target Fedora dist-git, so they are not used here)
   - Packit builds each PR in [mulderje/facetimehd-kmod-pr](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod-pr/) and each push to `main` in [mulderje/facetimehd-kmod](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/)
+  - Bump PRs merge themselves once all Packit builds pass (`.github/workflows/bump-merge.yml`). The kmod build compiles the driver against the newest `kernel-devel` in `%check`, so a green build means it compiles. If the `main` builds of a bump fail, `.github/workflows/main-watchdog.yml` opens a revert PR and comments why; the next daily bump retries
 
 ## Copr Build
 
