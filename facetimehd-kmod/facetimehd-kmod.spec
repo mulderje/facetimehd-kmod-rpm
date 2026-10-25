@@ -95,6 +95,9 @@ make -C "${kdir}" M="${PWD}" modules
 * Sun Oct 25 2026 github-actions <noreply@github.com> - 0.7.2-1
 - Update to 0.7.2 release
 
+* Sun Oct 25 2026 github-actions <noreply@github.com> - 0.7.2-1
+- Update to 0.7.2 release
+
 * Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
 - Document akmod-only kmodtool usage and pass %%{kmodname} consistently
