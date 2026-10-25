@@ -1,12 +1,18 @@
-# Watch Packit's builds of main commits that came from a merged bump PR. If a package
-# the bump changed fails to build, open a revert PR (merged by bump-merge.yml once its
-# own builds pass) and say why. The next daily upstream-bump run retries the bump.
-# Decision logic: .github/scripts/watchdog-decide.sh (tested by test-watchdog-decide.sh).
+# Watch Packit's builds of main commits that came from a merged bump PR. If a package the
+# bump changed fails to build, open a revert PR (merged by bump-merge.yml once its own
+# builds pass) and say why. The next daily upstream-bump run retries the bump.
+# check_run events are not reliably delivered for commits merged with the workflow token,
+# so a 15-minute sweep covers the latest commits too.
+# Logic: .github/scripts/watchdog-run.sh (tested by test-watchdog-run.sh and
+# test-watchdog-decide.sh).
 name: Main watchdog
 
 on:
   check_run:
     types: [completed]
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,105 +22,23 @@ permissions:
 jobs:
   watch:
     if: >-
-      github.event.check_run.app.slug == 'packit-as-a-service' &&
-      startsWith(github.event.check_run.name, 'rpm-build:main:')
+      github.event_name != 'check_run' ||
+      (github.event.check_run.app.slug == 'packit-as-a-service' &&
+       startsWith(github.event.check_run.name, 'rpm-build:main:'))
     runs-on: ubuntu-latest
     concurrency:
-      group: main-watchdog-${{ github.event.check_run.head_sha }}
+      group: main-watchdog
       cancel-in-progress: false
     env:
       GH_TOKEN: ${{ github.token }}
       SHA: ${{ github.event.check_run.head_sha }}
       REPO: ${{ github.repository }}
-      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       OWNER: ${{ github.repository_owner }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - name: Check the main builds of a bump commit
-        run: |
-          set -euo pipefail
-
-          # Only commits on main that came from a merged bot bump PR are watched.
-          # Revert merges and manual commits are ignored, so a failing revert cannot loop.
-          git merge-base --is-ancestor "$SHA" origin/main || { echo "$SHA is not on main"; exit 0; }
-          pr=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '
-            [ .[] | select(.merged_at != null)
-                  | select(.user.login == "github-actions[bot]")
-                  | select(.head.ref | test("^bump/")) | .number ] | first // empty')
-          if [ -z "$pr" ]; then
-            echo "$SHA did not come from a bump PR"
-            exit 0
-          fi
-
-          changed=$(git show --name-only --format= "$SHA" | cut -d/ -f1 | sort -u \
-            | grep -xE 'facetimehd|facetimehd-kmod|facetimehd-firmware' | paste -sd, - || true)
-          if [ -z "$changed" ]; then
-            echo "No package directory changed in $SHA"
-            exit 0
-          fi
-
-          gh api --paginate "repos/$REPO/commits/$SHA/check-runs?per_page=100" \
-            --jq '.check_runs[] | {name, status, conclusion, html_url, app: .app.slug}' \
-            | jq -s . > checks.json
-          result=$(bash .github/scripts/watchdog-decide.sh "$changed" < checks.json)
-          verdict=$(head -n 1 <<<"$result")
-          echo "Watchdog verdict for $SHA (changed: $changed): $verdict"
-          case "$verdict" in pending|ok) exit 0 ;; esac
-
-          marker="<!-- watchdog:$SHA -->"
-          if gh pr view "$pr" --json comments --jq '.comments[].body' | grep -qF "$marker"; then
-            echo "Already reported for $SHA"
-            exit 0
-          fi
-          failures=$(tail -n +2 <<<"$result" | sed -E 's/^FAIL ([^ ]+) (.*)$/- `\1`: \2/')
-
-          if [ "$verdict" = "comment" ]; then
-            gh pr comment "$pr" --body "@$OWNER Packit builds of \`${SHA:0:7}\` on main failed, but only in packages this bump did not change (changed: \`$changed\`), so nothing was reverted.
-
-          $failures
-
-          Workflow run: $RUN_URL
-          $marker"
-            exit 0
-          fi
-
-          # verdict = revert
-          branch="revert/${SHA:0:7}"
-          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
-            echo "$branch already exists"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch -c "$branch" origin/main
-          if ! git revert --no-edit "$SHA"; then
-            git revert --abort || true
-            gh pr comment "$pr" --body "@$OWNER Packit builds of \`${SHA:0:7}\` on main failed, but the automatic revert hit conflicts, so please revert it manually.
-
-          $failures
-
-          Workflow run: $RUN_URL
-          $marker"
-            exit 0
-          fi
-          git push origin "$branch"
-          title="Revert \"$(git log -1 --format=%s "$SHA")\""
-          revert_pr=$(gh pr create --base main --head "$branch" --title "$title" --body "@$OWNER Automatic revert of \`${SHA:0:7}\` (#$pr): Packit builds of main failed for a package this bump changed (\`$changed\`).
-
-          $failures
-
-          This PR merges itself once its own Packit builds pass. The next daily upstream-bump run opens a new bump PR, which must pass its builds again before it merges.
-
-          Workflow run: $RUN_URL
-
-          Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>")
-          gh pr edit "$revert_pr" --add-reviewer "$OWNER" || true
-          gh pr comment "$pr" --body "@$OWNER Packit builds of \`${SHA:0:7}\` on main failed, so it is being reverted in $revert_pr.
-
-          $failures
-
-          Workflow run: $RUN_URL
-          $marker"
+      - name: Check the main builds of bump commits
+        run: bash .github/scripts/watchdog-run.sh
