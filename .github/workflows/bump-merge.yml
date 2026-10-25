@@ -24,6 +24,8 @@ jobs:
       SHA: ${{ github.event.check_run.head_sha }}
       REPO: ${{ github.repository }}
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Added to every squash commit this workflow creates
+      SIGNOFF: "Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -71,7 +73,9 @@ jobs:
                 gh pr comment "$n" --body-file comment.md
                 ;;
               pass)
-                gh pr merge "$n" --squash --delete-branch
+                title=$(gh pr view "$n" --json title --jq .title)
+                body=$(printf 'Merged automatically after all Packit builds passed.\n\n%s' "$SIGNOFF")
+                gh pr merge "$n" --squash --delete-branch --subject "$title (#$n)" --body "$body"
                 gh pr comment "$n" --body "Merged after all Packit builds passed. Workflow run: $RUN_URL"
                 ;;
             esac
