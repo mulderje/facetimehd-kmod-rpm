@@ -1,8 +1,9 @@
 # Watch Packit's builds of main commits that came from a merged bump PR. If a package the
 # bump changed fails to build, open a revert PR (merged by bump-merge.yml once its own
 # builds pass) and say why. The next daily upstream-bump run retries the bump.
-# check_run events are not reliably delivered for commits merged with the workflow token,
-# so a 15-minute sweep covers the latest commits too.
+# upstream-bump.yml already waits for these builds itself; this is the safety net for when
+# that run dies, so it runs on Packit check events, when an upstream-bump run ends without
+# succeeding, and on manual dispatch (the daily bump run also sweeps leftovers first).
 # Logic: .github/scripts/watchdog-run.sh (tested by test-watchdog-run.sh and
 # test-watchdog-decide.sh).
 name: Main watchdog
@@ -10,8 +11,9 @@ name: Main watchdog
 on:
   check_run:
     types: [completed]
-  schedule:
-    - cron: "7,22,37,52 * * * *"
+  workflow_run:
+    workflows: ["Upstream bump"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -22,10 +24,13 @@ permissions:
 jobs:
   watch:
     if: >-
-      github.event_name != 'check_run' ||
-      (github.event.check_run.app.slug == 'packit-as-a-service' &&
-       startsWith(github.event.check_run.name, 'rpm-build:main:'))
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'check_run' &&
+       github.event.check_run.app.slug == 'packit-as-a-service' &&
+       startsWith(github.event.check_run.name, 'rpm-build:main:')) ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     concurrency:
       group: main-watchdog
       cancel-in-progress: false

@@ -21,7 +21,7 @@ Build process / TODOs:
 ## Automation
 
 - `upstream-bump.yml` checks for new upstream tags daily and drives each bump from start to finish in one run: it opens the PR, waits for Packit's PR builds, merges when they are green (a red one gets a comment, a `needs-review` label and a review request to the owner), waits for the builds of the merge commit on `main`, opens a revert PR (review requested) if a package the bump changed fails, and comments the outcome on the PR. The run turns red whenever a person needs to look, so GitHub emails the owner. Its manual `force` option opens a changelog-only PR to test the pipeline.
-- `bump-merge.yml` (every 10 minutes and on Packit check events) and `main-watchdog.yml` (every 15 minutes and on check events) do the same merging and reverting as a safety net, for example if a run dies. GitHub does not deliver check events for PRs opened with the workflow token, hence the sweeps.
+- The daily bump run first sweeps leftovers (open green bot PRs, recent bump commits on `main`), so anything an earlier run dropped is picked up within a day. `bump-merge.yml` and `main-watchdog.yml` do the same merging and reverting as a safety net, triggered by Packit check events and by an `upstream-bump` run that fails, is cancelled or times out. They do not poll. GitHub does not deliver check events for PRs opened with the workflow token, which is why the bump run waits for Packit itself.
 - `kernel-drift.yml` compiles the driver against the newest `kernel-devel` of Fedora 43, 44, 45 and rawhide every week; a failure means a new kernel broke it and upstream needs a fix.
 - `keepalive.yml` re-enables the scheduled workflows monthly so GitHub's 60-day inactivity rule does not switch them off.
 

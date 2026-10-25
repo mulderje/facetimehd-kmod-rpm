@@ -1,14 +1,16 @@
-# Merge bot-opened bump/revert PRs once every Packit PR build has passed, or say why not.
-# Packit reports its builds as check runs, which trigger this workflow, but those events
-# are not delivered for PRs opened with the workflow token, so a 10-minute sweep covers
-# them. Logic: .github/scripts/gate-run.sh (tested by test-gate-run.sh and test-pr-gate.sh).
+# Safety net for upstream-bump.yml, which merges its own PRs. Runs when Packit reports a
+# finished check (not delivered for PRs opened with the workflow token, so that alone is
+# not enough), when an upstream-bump run ends without succeeding (died, cancelled or timed
+# out), and on manual dispatch; the daily bump run also sweeps leftovers before it starts.
+# Logic: .github/scripts/gate-run.sh (tested by test-gate-run.sh and test-pr-gate.sh).
 name: Bump merge
 
 on:
   check_run:
     types: [completed]
-  schedule:
-    - cron: "*/10 * * * *"
+  workflow_run:
+    workflows: ["Upstream bump"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -18,8 +20,12 @@ permissions:
 
 jobs:
   gate:
-    if: github.event_name != 'check_run' || github.event.check_run.app.slug == 'packit-as-a-service'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'check_run' && github.event.check_run.app.slug == 'packit-as-a-service') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # One run at a time so a sweep and a check event cannot both try to merge a PR
     concurrency:
       group: bump-merge

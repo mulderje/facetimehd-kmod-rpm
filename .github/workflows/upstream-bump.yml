@@ -30,8 +30,31 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: bash .github/scripts/test-bump-spec.sh
 
-  bump:
+  # Pick up anything an earlier run left behind (a bump PR that was never merged, a failed
+  # main build nobody has been told about) before opening new work.
+  leftovers:
     needs: test
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      OWNER: ${{ github.repository_owner }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      SIGNOFF: "Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Gate open bot PRs and check recent bump commits
+        run: |
+          bash .github/scripts/gate-run.sh
+          bash .github/scripts/watchdog-run.sh
+
+  bump:
+    needs: [test, leftovers]
+    # A failed sweep must not stop new bumps (it is red on its own, so the owner hears of it)
+    if: ${{ !cancelled() && needs.test.result == 'success' }}
     runs-on: ubuntu-latest
     # Packit's builds take about ten minutes per phase; leave generous room
     timeout-minutes: 180
