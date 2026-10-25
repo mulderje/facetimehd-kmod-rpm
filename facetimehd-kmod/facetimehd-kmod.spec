@@ -34,9 +34,8 @@ BuildRequires:  kmodtool
 BuildRequires:  kernel-devel
 
 
-# needed for plague to make sure it builds for i586 and i686
-ExclusiveArch:  i686 x86_64
-# ppc disabled because broadcom only provides x86 and x86_64 bits
+# Broadcom only provides x86_64 bits; Fedora no longer ships i686 kernels
+ExclusiveArch:  x86_64
 
 
 # kmodtool does its magic here
@@ -85,6 +84,9 @@ chmod 0755 $RPM_BUILD_ROOT%{kmodinstdir_prefix}*%{kmodinstdir_postfix}/* || :
 %{?akmod_install}
 
 %changelog
+* Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
+- Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
+
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Update to 0.7.0.1 release (fixes build against kernel >= 7.0)
 - Drop deprecated Group tag and stale --repo rpmfusion debug flag

@@ -18,6 +18,7 @@ URL:            %{forgeurl}
 Source:         %{forgesource}
 
 BuildArch:      noarch
+ExclusiveArch:  x86_64
 
 BuildRequires:  curl
 BuildRequires:  cpio
@@ -42,6 +43,9 @@ FacetimeHD firmware download and extraction tool
 %{_prefix}/lib/firmware/facetimehd/firmware.bin
 
 %changelog
+* Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 1.0.0-1
+- Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
+
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 1.0.0-1
 - Mark package noarch; drop redundant bash/coreutils BuildRequires
 - Ship upstream LICENSE via %%license macro
