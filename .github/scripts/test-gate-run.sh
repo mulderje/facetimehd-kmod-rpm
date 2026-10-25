@@ -84,4 +84,17 @@ printf 'OPEN\nMERGED\n' > "$tmp/state"
 run "merge race" GH_MERGE_RC=1 GH_STATE_FILE="$tmp/state"
 ! calls | grep -qF 'the merge failed' || fail "merge race: reported a failure for a PR that was merged"
 
+# (j) PRs opened by the GitHub App are bot PRs too
+printf '%s' '[{"number":22,"state":"open","user":{"login":"facetimehd-rpm-bot[bot]"},"head":{"ref":"bump/facetimehd","sha":"ddddddd4"}}]' > "$tmp/pulls.json"
+printf '%s' "$checks_json" > "$tmp/checks.json"
+printf '%s' '{"comments":[]}' > "$tmp/comments.json"
+run "app pr"
+calls | grep -qF 'gh pr merge 22 --squash' || { calls; fail "app pr: not merged"; }
+
+# (k) pipeline test (SMOKE): green PR is closed with its branch deleted, never merged
+run "smoke" SMOKE=true
+! calls | grep -q 'pr merge' || fail "smoke: merged"
+calls | grep -qF 'gh pr close 22 --delete-branch' || { calls; fail "smoke: not closed with branch deleted"; }
+calls | grep -qF 'bump-gate:smoke-passed:ddddddd4' || fail "smoke: marker missing"
+
 echo PASS

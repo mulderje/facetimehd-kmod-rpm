@@ -25,7 +25,7 @@ check_commit() {
     git merge-base --is-ancestor "$sha" origin/main || { echo "${sha:0:7}: not on main"; return 0; }
     pr=$(gh api "repos/$REPO/commits/$sha/pulls" --jq '
         [ .[] | select(.merged_at != null)
-              | select(.user.login == "github-actions[bot]")
+              | select(.user.login | endswith("[bot]"))
               | select(.head.ref | test("^bump/")) | .number ] | first // empty' </dev/null)
     if [ -z "$pr" ]; then
         echo "${sha:0:7}: not from a bump PR"

@@ -10,7 +10,7 @@
 #
 # Usage: bump-chain.sh <pr-number>
 # Environment: GH_TOKEN, REPO, OWNER, SIGNOFF, RUN_URL; optional POLL_SECONDS (60) and
-# MAX_POLLS (60, per phase); GATE_SCRIPT / WATCHDOG_SCRIPT override the scripts (tests).
+# MAX_POLLS (60, per phase); SMOKE=true makes the gate close the PR instead of merging; GATE_SCRIPT / WATCHDOG_SCRIPT override the scripts (tests).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 pr=${1:?usage: bump-chain.sh <pr-number>}
@@ -32,7 +32,12 @@ for ((i = 0; i < MAX_POLLS; i++)); do
     SHA=$head bash "$GATE_SCRIPT" || true
     case "$(pr_field state .state)" in
         MERGED) merged=true; break ;;
-        CLOSED) echo "PR #$pr was closed without merging"; exit 1 ;;
+        CLOSED)
+            if pr_field comments '.comments[].body' | grep -qF "<!-- bump-gate:smoke-passed:$head -->"; then
+                echo "PR #$pr: pipeline test passed; closed without merging"
+                exit 0
+            fi
+            echo "PR #$pr was closed without merging"; exit 1 ;;
     esac
     if pr_field comments '.comments[].body' | grep -qF "<!-- bump-gate:fail:$head -->"; then
         echo "PR #$pr: Packit builds failed; the gate commented and requested a review"
