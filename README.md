@@ -21,8 +21,8 @@ Build process / TODOs:
 ## Automation
 
 - `upstream-bump.yml` opens bump PRs daily (manual dispatch has a `force` option that pushes one changelog-only PR through the whole pipeline as a test).
-- `bump-merge.yml` merges a green bump PR; a red one gets a comment, a `needs-review` label and a review request to the owner.
-- `main-watchdog.yml` opens a revert PR (review requested) if the `main` builds of a bump fail.
+- `bump-merge.yml` merges a green bump PR; a red one gets a comment, a `needs-review` label and a review request to the owner. It runs on Packit check events and on a 10-minute sweep, because GitHub does not deliver check events for PRs opened with the workflow token.
+- `main-watchdog.yml` opens a revert PR (review requested) if the `main` builds of a bump fail; it also sweeps every 15 minutes.
 - `kernel-drift.yml` compiles the driver against the newest `kernel-devel` of Fedora 43, 44, 45 and rawhide every week; a failure means a new kernel broke it and upstream needs a fix.
 - `keepalive.yml` re-enables the scheduled workflows monthly so GitHub's 60-day inactivity rule does not switch them off.
 

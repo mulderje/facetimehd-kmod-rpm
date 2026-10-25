@@ -1,11 +1,15 @@
-# Merge bot-opened bump/revert PRs once every Packit PR build has passed, or say
-# why not. Packit reports its builds as check runs, which trigger this workflow.
-# Decision logic: .github/scripts/pr-gate.sh (tested by test-pr-gate.sh).
+# Merge bot-opened bump/revert PRs once every Packit PR build has passed, or say why not.
+# Packit reports its builds as check runs, which trigger this workflow, but those events
+# are not delivered for PRs opened with the workflow token, so a 10-minute sweep covers
+# them. Logic: .github/scripts/gate-run.sh (tested by test-gate-run.sh and test-pr-gate.sh).
 name: Bump merge
 
 on:
   check_run:
     types: [completed]
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,73 +18,22 @@ permissions:
 
 jobs:
   gate:
-    if: github.event.check_run.app.slug == 'packit-as-a-service'
+    if: github.event_name != 'check_run' || github.event.check_run.app.slug == 'packit-as-a-service'
     runs-on: ubuntu-latest
+    # One run at a time so a sweep and a check event cannot both try to merge a PR
     concurrency:
-      group: bump-merge-${{ github.event.check_run.head_sha }}
+      group: bump-merge
       cancel-in-progress: false
     env:
       GH_TOKEN: ${{ github.token }}
       SHA: ${{ github.event.check_run.head_sha }}
       REPO: ${{ github.repository }}
+      OWNER: ${{ github.repository_owner }}
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       # Added to every squash commit this workflow creates
       SIGNOFF: "Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>"
-      OWNER: ${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Gate and merge
-        run: |
-          set -euo pipefail
-
-          # Open bump/revert PRs opened by the bot whose head is this commit
-          prs=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '
-            .[] | select(.state == "open")
-                | select(.head.sha == env.SHA)
-                | select(.user.login == "github-actions[bot]")
-                | select(.head.ref | test("^(bump|revert)/"))
-                | .number')
-          if [ -z "$prs" ]; then
-            echo "No bump/revert PR for $SHA"
-            exit 0
-          fi
-
-          gh api --paginate "repos/$REPO/commits/$SHA/check-runs?per_page=100" \
-            --jq '.check_runs[] | {name, status, conclusion, html_url, app: .app.slug}' \
-            | jq -s . > checks.json
-          result=$(bash .github/scripts/pr-gate.sh < checks.json)
-          verdict=$(head -n 1 <<<"$result")
-          echo "Gate verdict for $SHA: $verdict"
-
-          for n in $prs; do
-            case "$verdict" in
-              pending)
-                ;;
-              fail)
-                marker="<!-- bump-gate:fail:$SHA -->"
-                if gh pr view "$n" --json comments --jq '.comments[].body' | grep -qF "$marker"; then
-                  echo "PR #$n: failure already reported"
-                  continue
-                fi
-                {
-                  echo "@$OWNER needs your review. Not merging: Packit builds failed for \`${SHA:0:7}\`."
-                  echo
-                  tail -n +2 <<<"$result" | sed -E 's/^FAIL ([^ ]+) (.*)$/- `\1`: \2/'
-                  echo
-                  echo "Workflow run: $RUN_URL"
-                  echo "$marker"
-                } > comment.md
-                gh pr comment "$n" --body-file comment.md
-                # Ask the owner for a review so it shows up in their notifications
-                gh pr edit "$n" --add-reviewer "$OWNER" --add-label needs-review \
-                  || gh pr edit "$n" --add-reviewer "$OWNER" || true
-                ;;
-              pass)
-                title=$(gh pr view "$n" --json title --jq .title)
-                body=$(printf 'Merged automatically after all Packit builds passed.\n\n%s' "$SIGNOFF")
-                gh pr merge "$n" --squash --delete-branch --subject "$title (#$n)" --body "$body"
-                gh pr comment "$n" --body "Merged after all Packit builds passed. Workflow run: $RUN_URL"
-                ;;
-            esac
-          done
+        run: bash .github/scripts/gate-run.sh
