@@ -70,3 +70,5 @@ jobs:
             Automated bump to upstream release ${{ steps.bump.outputs.version }}
             (${{ matrix.upstream }}). Packit will build it on Copr; check those
             builds before merging, as new releases can need spec changes.
+
+            Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>
