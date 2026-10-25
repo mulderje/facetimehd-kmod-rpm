@@ -20,9 +20,8 @@ Build process / TODOs:
 
 ## Automation
 
-- `upstream-bump.yml` opens bump PRs daily (manual dispatch has a `force` option that pushes one changelog-only PR through the whole pipeline as a test).
-- `bump-merge.yml` merges a green bump PR; a red one gets a comment, a `needs-review` label and a review request to the owner. It runs on Packit check events and on a 10-minute sweep, because GitHub does not deliver check events for PRs opened with the workflow token.
-- `main-watchdog.yml` opens a revert PR (review requested) if the `main` builds of a bump fail; it also sweeps every 15 minutes.
+- `upstream-bump.yml` checks for new upstream tags daily and drives each bump from start to finish in one run: it opens the PR, waits for Packit's PR builds, merges when they are green (a red one gets a comment, a `needs-review` label and a review request to the owner), waits for the builds of the merge commit on `main`, opens a revert PR (review requested) if a package the bump changed fails, and comments the outcome on the PR. The run turns red whenever a person needs to look, so GitHub emails the owner. Its manual `force` option opens a changelog-only PR to test the pipeline.
+- `bump-merge.yml` (every 10 minutes and on Packit check events) and `main-watchdog.yml` (every 15 minutes and on check events) do the same merging and reverting as a safety net, for example if a run dies. GitHub does not deliver check events for PRs opened with the workflow token, hence the sweeps.
 - `kernel-drift.yml` compiles the driver against the newest `kernel-devel` of Fedora 43, 44, 45 and rawhide every week; a failure means a new kernel broke it and upstream needs a fix.
 - `keepalive.yml` re-enables the scheduled workflows monthly so GitHub's 60-day inactivity rule does not switch them off.
 
@@ -35,6 +34,7 @@ Every squash-merged commit on `main` carries a `Signed-off-by:` trailer. GitHub 
 - The OpenScanHub diff scan for `facetimehd-firmware` ends neutral on rawhide: OSH builds the baseline SRPM in a chroot without network, and the firmware's `%build` downloads Apple's driver. It is harmless (the auto-merge gate ignores `osh-diff-scan:*`); a fix is still to be found. (Issues are disabled on this repo, so it is tracked here.)
 - Copr's FedoraReview step reports "No disttag found" for `facetimehd-kmod` because `kmodtool` names the binary packages `akmod-facetimehd` and `kmod-facetimehd`, not after the source package. It does not fail the build and is a Copr project setting.
 - The driver optionally loads sensor calibration "set files" (`facetimehd/NNNN_01XX.dat`). They are not packaged: `facetimehd-firmware` v1.0.0 does not provide them, and upstream `master` (firmware 5.60.0 plus all eleven set files) has no release tag yet.
+- The calibration set files above, and firmware 5.60.0, wait on an upstream release tag. Requested in [patjak/facetimehd-firmware#17](https://github.com/patjak/facetimehd-firmware/issues/17); bump PRs will follow once a tag exists.
 - `bump-merge.yml` and `main-watchdog.yml` have been tested with fixtures but have not run on a real bump yet; the first upstream tag after 0.7.2 will be their first live run.
 
 ## Copr Build
