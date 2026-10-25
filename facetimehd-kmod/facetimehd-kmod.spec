@@ -12,7 +12,7 @@
 %global kmodname facetimehd
 
 %global forgeurl https://github.com/patjak/%{srcname}
-%global tag 0.7.0.1
+%global tag 0.7.2
 %forgemeta
 
 Name:       %{srcname}-kmod
@@ -28,9 +28,10 @@ Requires: facetimehd-firmware
 # see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=886474
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:	gcc
-BuildRequires:  rpmdevtools
 BuildRequires:  kmodtool
-BuildRequires:  kernel-devel
+# only the akmod SRPM build (e.g. Copr) needs kernel-devel, for the %%check compile test;
+# akmods supplies it itself when it rebuilds with 'kernels' defined
+%{!?kernels:BuildRequires: kernel-devel}
 
 
 # Broadcom only provides x86_64 bits; Fedora no longer ships i686 kernels
@@ -77,15 +78,28 @@ for kernel_version in %{?kernel_versions}; do
  popd
 done
 
-# TODO: also /etc/modules-load.d/facetimehd.conf
-
-chmod 0755 $RPM_BUILD_ROOT%{kmodinstdir_prefix}*%{kmodinstdir_postfix}/* || :
 %{?akmod_install}
 
+%check
+# In akmod-only builds nothing above compiles the module, so compile it once against
+# the newest kernel-devel in the buildroot to catch breakage early. Output is discarded.
+# akmods' rebuild defines 'kernels' and compiles for real, so skip it there.
+%if "%{?kernels}" == ""
+kdir=$(ls -d %{_usrsrc}/kernels/*/ | sort -V | tail -n 1)
+echo "Compile test against ${kdir}"
+# rpm has already cd'd into the extracted source tree; nothing from here is installed
+make -C "${kdir}" M="${PWD}" modules
+%endif
+
 %changelog
+* Sun Oct 25 2026 github-actions <noreply@github.com> - 0.7.2-1
+- Update to 0.7.2 release
+
 * Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
 - Document akmod-only kmodtool usage and pass %%{kmodname} consistently
+- Compile-test the module against the newest kernel-devel in %%check (akmod SRPM builds only)
+- Drop unused rpmdevtools BuildRequires, stale TODO and redundant chmod (modules are installed 0755)
 
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Update to 0.7.0.1 release (fixes build against kernel >= 7.0)

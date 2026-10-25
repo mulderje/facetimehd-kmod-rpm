@@ -5,7 +5,7 @@
 %global srcname facetimehd
 
 %global forgeurl https://github.com/patjak/%{srcname}
-%global tag 0.7.0.1
+%global tag 0.7.2
 %forgemeta
 
 Name:       facetimehd
@@ -38,14 +38,29 @@ install -p -m 0644 /dev/stdin %{buildroot}%{_sysconfdir}/modules-load.d/facetime
 facetimehd
 EOF
 
+# modprobe.d content comes from upstream's dkms.conf (MODULES_CONF entries, currently
+# "blacklist bdc_pci"), so it follows upstream; the build fails if none are found.
+install -d -m 0755 %{buildroot}%{_sysconfdir}/modprobe.d
+{
+    echo "# From upstream dkms.conf (MODULES_CONF)"
+    sed -n 's/^MODULES_CONF\[[0-9]*\]="\(.*\)"$/\1/p' dkms.conf
+} > %{buildroot}%{_sysconfdir}/modprobe.d/facetimehd.conf
+grep -q '^[^#]' %{buildroot}%{_sysconfdir}/modprobe.d/facetimehd.conf
+chmod 0644 %{buildroot}%{_sysconfdir}/modprobe.d/facetimehd.conf
+
 %files
 %license LICENSE
 %doc README.md
 %config(noreplace) %{_sysconfdir}/modules-load.d/facetimehd.conf
+%config(noreplace) %{_sysconfdir}/modprobe.d/facetimehd.conf
 
 %changelog
+* Sun Oct 25 2026 github-actions <noreply@github.com> - 0.7.2-1
+- Update to 0.7.2 release
+
 * Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
+- Ship modprobe.d/facetimehd.conf generated from upstream dkms.conf (blacklist bdc_pci)
 
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Update to 0.7.0.1 release (fixes build against kernel >= 7.0)

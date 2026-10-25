@@ -1,23 +1,25 @@
 # Packit configuration for facetimehd-kmod-rpm
 # https://packit.dev/docs/configuration/
 #
-# This is a monorepo containing three downstream RPM specs that build from two
-# upstream sources (patjak/facetimehd for the driver + metadata packages, and
-# patjak/facetimehd-firmware for the firmware extractor). There is no source
-# code in this repo — only specs — so each package overrides Packit's default
-# "archive this repo" behavior with a create-archive action that downloads the
-# correct upstream tarball from GitHub and drops it next to the spec.
+# This is a monorepo of three RPM specs that build from two upstream sources
+# (patjak/facetimehd for the driver and metadata packages, patjak/facetimehd-firmware
+# for the firmware). There is no source code here, so each package overrides Packit's
+# default "archive this repo" behaviour with a create-archive action that downloads the
+# tarball named by the spec's Source (spectool resolves %forgesource) next to the spec.
 #
 # Packit drives two flows:
-#   - pull_request -> scratch Copr project (mulderje/facetimehd-kmod-pr) for
-#     per-PR verification before merge.
-#   - push to main -> official Copr project (mulderje/facetimehd-kmod) whose
-#     RPMs are consumed downstream (e.g. by mulderje/ublue-oldair).
+#   - pull_request -> scratch Copr project (mulderje/facetimehd-kmod-pr) for per-PR
+#     verification. The kmod spec's %check compiles the driver against the newest
+#     kernel-devel, so a green build means it compiles.
+#   - push to main -> official Copr project (mulderje/facetimehd-kmod), consumed
+#     downstream (e.g. by mulderje/ublue-oldair).
 #
-# pull_from_upstream is intentionally disabled until the build is stable
-# across the kernel versions we care about; when enabled, upstream_project_url
-# will need per-package handling (Packit currently only honors it at the
-# top level, so the firmware package's separate upstream repo is deferred).
+# Packit's release jobs (propose_downstream, pull_from_upstream) only target Fedora
+# dist-git, so new upstream tags are tracked by .github/workflows/upstream-bump.yml,
+# which opens bump PRs that bump-merge.yml merges once these builds pass.
+#
+# enable_net is only set for facetimehd-firmware: its Makefile downloads Apple's driver
+# at %build time, and Packit defaults enable_net to False.
 
 packages:
   facetimehd:
