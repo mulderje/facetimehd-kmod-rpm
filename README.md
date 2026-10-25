@@ -18,6 +18,14 @@ Build process / TODOs:
   - Packit builds each PR in [mulderje/facetimehd-kmod-pr](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod-pr/) and each push to `main` in [mulderje/facetimehd-kmod](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/)
   - Bump PRs merge themselves once all Packit builds pass (`.github/workflows/bump-merge.yml`). The kmod build compiles the driver against the newest `kernel-devel` in `%check`, so a green build means it compiles. If the `main` builds of a bump fail, `.github/workflows/main-watchdog.yml` opens a revert PR and comments why; the next daily bump retries
 
+## Automation
+
+- `upstream-bump.yml` opens bump PRs daily (manual dispatch has a `force` option that pushes one changelog-only PR through the whole pipeline as a test).
+- `bump-merge.yml` merges a green bump PR; a red one gets a comment, a `needs-review` label and a review request to the owner.
+- `main-watchdog.yml` opens a revert PR (review requested) if the `main` builds of a bump fail.
+- `kernel-drift.yml` compiles the driver against the newest `kernel-devel` of Fedora 43, 44, 45 and rawhide every week; a failure means a new kernel broke it and upstream needs a fix.
+- `keepalive.yml` re-enables the scheduled workflows monthly so GitHub's 60-day inactivity rule does not switch them off.
+
 ## Commit sign-off
 
 Every squash-merged commit on `main` carries a `Signed-off-by:` trailer. GitHub makes the squash commit with the PR author as author and signs it itself (Verified); the auto-merge workflow adds the trailer, and manual squash merges should include it (or set the repo's default squash message to the PR title and description, which carry it).

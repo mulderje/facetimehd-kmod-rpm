@@ -1,0 +1,37 @@
+# Packit only builds on PRs and pushes, so a new Fedora kernel that breaks the driver
+# would go unnoticed until a user's akmod rebuild fails. This weekly run compiles the
+# driver at the tag the spec uses against the newest kernel-devel of each Fedora release
+# and fails (GitHub emails the failure) when it does not build.
+name: Kernel drift
+
+on:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora: ["43", "44", "45", "rawhide"]
+    container:
+      image: fedora:${{ matrix.fedora }}
+    steps:
+      - name: Install build tools and the newest kernel-devel
+        run: dnf -y install git gcc make elfutils-libelf-devel kernel-devel
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Compile the driver against the newest kernel-devel
+        run: |
+          set -euo pipefail
+          tag=$(sed -n 's/^%global tag[[:space:]]\+//p' facetimehd-kmod/facetimehd-kmod.spec)
+          kdir=$(ls -d /usr/src/kernels/*/ | sort -V | tail -n 1)
+          echo "Driver $tag against $kdir"
+          git clone --depth 1 --branch "$tag" https://github.com/patjak/facetimehd.git driver
+          make -C "$kdir" M="$PWD/driver" modules
