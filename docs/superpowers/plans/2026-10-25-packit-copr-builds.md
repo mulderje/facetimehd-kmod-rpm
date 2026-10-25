@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Work on branch `packit` only (PR #7 into `main`). Never push to `main`. Leave PR #5 alone.
-- x86_64 only: Packit targets `fedora-all-x86_64`; `facetimehd-kmod` gets `ExclusiveArch: x86_64`.
+- x86_64 only: Packit targets `fedora-all-x86_64`; all three specs get `ExclusiveArch: x86_64` (kmod and facetimehd for the x86-only driver, firmware because Apple's firmware is x86 only); firmware and facetimehd stay `BuildArch: noarch`.
 - Copr PR project `mulderje/facetimehd-kmod-pr`; Copr `main` project `mulderje/facetimehd-kmod`; `owner` and `project` are separate keys.
 - `enable_net: true` on the firmware jobs only (its Makefile downloads Apple's installer at `%build`).
 - Upstream tags: `patjak/facetimehd` uses `0.7.0.1` style (no prefix); `patjak/facetimehd-firmware` uses `v1.0.0` style.
@@ -47,17 +47,19 @@
 - [ ] **Step 4: Commit and push to `packit`.** Message: `Restore working Packit config and scope enable_net to firmware`.
 - [ ] **Step 5: Verify on Copr.** Wait for the PR checks; read them with the `get_check_runs` of PR #7. Expected: all 12 `rpm-build:*` checks `success`. If a firmware build fails, read its log: a network error fetching Apple's installer means `enable_net` did not apply, so check the job is the one with `enable_net: true`; any other error is a real build failure to fix before continuing.
 
-### Task 2: x86_64 only for the kmod
+### Task 2: x86_64 only for all three specs
 
 **Files:**
-- Modify: `facetimehd-kmod/facetimehd-kmod.spec` (the `ExclusiveArch` line and the comment above it)
+- Modify: `facetimehd-kmod/facetimehd-kmod.spec` (replace the `ExclusiveArch` line and delete the plague/ppc comments)
+- Modify: `facetimehd/facetimehd.spec` (add `ExclusiveArch:  x86_64` after `BuildArch:  noarch`)
+- Modify: `facetimehd-firmware/facetimehd-firmware.spec` (add `ExclusiveArch:  x86_64` after `BuildArch:      noarch`)
 
 **Interfaces:**
 - Consumes: green baseline from Task 1.
 
-- [ ] **Step 1: Edit.** Change `ExclusiveArch:  i686 x86_64` to `ExclusiveArch:  x86_64` and delete the two comment lines referring to plague and ppc. Add a `%changelog` entry at the top: author `Jon Mulder <jon.e.mulder@gmail.com>`, text `Restrict to x86_64 (no i686 kernels in Fedora)`.
+- [ ] **Step 1: Edit the three specs.** Kmod: `ExclusiveArch:  x86_64`. Add a `%changelog` entry at the top of each, author `Jon Mulder <jon.e.mulder@gmail.com>`, text `Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)`.
 - [ ] **Step 2: Commit and push.**
-- [ ] **Step 3: Verify.** All 12 PR checks still `success`; the kmod `Provides`/`akmod-facetimehd` still appear in the build log's `Wrote:` lines.
+- [ ] **Step 3: Verify.** All 12 PR checks still `success`; the kmod build log still has `Wrote:` lines for `akmod-facetimehd`; noarch packages still produce `.noarch.rpm`.
 
 ### Task 3: Derive source download from the spec
 
