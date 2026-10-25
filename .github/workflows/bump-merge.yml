@@ -26,6 +26,7 @@ jobs:
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       # Added to every squash commit this workflow creates
       SIGNOFF: "Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>"
+      OWNER: ${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -63,7 +64,7 @@ jobs:
                   continue
                 fi
                 {
-                  echo "Not merging: Packit builds failed for \`${SHA:0:7}\`."
+                  echo "@$OWNER needs your review. Not merging: Packit builds failed for \`${SHA:0:7}\`."
                   echo
                   tail -n +2 <<<"$result" | sed -E 's/^FAIL ([^ ]+) (.*)$/- `\1`: \2/'
                   echo
@@ -71,6 +72,9 @@ jobs:
                   echo "$marker"
                 } > comment.md
                 gh pr comment "$n" --body-file comment.md
+                # Ask the owner for a review so it shows up in their notifications
+                gh pr edit "$n" --add-reviewer "$OWNER" --add-label needs-review \
+                  || gh pr edit "$n" --add-reviewer "$OWNER" || true
                 ;;
               pass)
                 title=$(gh pr view "$n" --json title --jq .title)

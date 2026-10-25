@@ -1,0 +1,27 @@
+# GitHub disables scheduled workflows in a public repo after 60 days without repository
+# activity, which would silently stop the daily upstream-bump check during a quiet spell.
+# This monthly run re-enables the scheduled workflows through the API, which is the
+# lightweight keepalive (no dummy commits).
+name: Keepalive
+
+on:
+  schedule:
+    - cron: "41 3 1 * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-enable the scheduled workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          for wf in upstream-bump.yml kernel-drift.yml keepalive.yml; do
+            gh api -X PUT "repos/$REPO/actions/workflows/$wf/enable"
+            echo "enabled $wf"
+          done

@@ -27,6 +27,7 @@ jobs:
       SHA: ${{ github.event.check_run.head_sha }}
       REPO: ${{ github.repository }}
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      OWNER: ${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -71,7 +72,7 @@ jobs:
           failures=$(tail -n +2 <<<"$result" | sed -E 's/^FAIL ([^ ]+) (.*)$/- `\1`: \2/')
 
           if [ "$verdict" = "comment" ]; then
-            gh pr comment "$pr" --body "Packit builds of \`${SHA:0:7}\` on main failed, but only in packages this bump did not change (changed: \`$changed\`), so nothing was reverted.
+            gh pr comment "$pr" --body "@$OWNER Packit builds of \`${SHA:0:7}\` on main failed, but only in packages this bump did not change (changed: \`$changed\`), so nothing was reverted.
 
           $failures
 
@@ -91,7 +92,7 @@ jobs:
           git switch -c "$branch" origin/main
           if ! git revert --no-edit "$SHA"; then
             git revert --abort || true
-            gh pr comment "$pr" --body "Packit builds of \`${SHA:0:7}\` on main failed, but the automatic revert hit conflicts, so please revert it manually.
+            gh pr comment "$pr" --body "@$OWNER Packit builds of \`${SHA:0:7}\` on main failed, but the automatic revert hit conflicts, so please revert it manually.
 
           $failures
 
@@ -101,7 +102,7 @@ jobs:
           fi
           git push origin "$branch"
           title="Revert \"$(git log -1 --format=%s "$SHA")\""
-          revert_pr=$(gh pr create --base main --head "$branch" --title "$title" --body "Automatic revert of \`${SHA:0:7}\` (#$pr): Packit builds of main failed for a package this bump changed (\`$changed\`).
+          revert_pr=$(gh pr create --base main --head "$branch" --title "$title" --body "@$OWNER Automatic revert of \`${SHA:0:7}\` (#$pr): Packit builds of main failed for a package this bump changed (\`$changed\`).
 
           $failures
 
@@ -110,7 +111,8 @@ jobs:
           Workflow run: $RUN_URL
 
           Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>")
-          gh pr comment "$pr" --body "Packit builds of \`${SHA:0:7}\` on main failed, so it is being reverted in $revert_pr.
+          gh pr edit "$revert_pr" --add-reviewer "$OWNER" || true
+          gh pr comment "$pr" --body "@$OWNER Packit builds of \`${SHA:0:7}\` on main failed, so it is being reverted in $revert_pr.
 
           $failures
 

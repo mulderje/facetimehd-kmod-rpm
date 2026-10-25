@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: Open a bump PR even if the specs already have the latest tag (pipeline test, adds a changelog entry only)
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -43,12 +48,13 @@ jobs:
         env:
           UPSTREAM: ${{ matrix.upstream }}
           SPECS: ${{ matrix.specs }}
+          FORCE: ${{ inputs.force }}
         run: |
           first=${SPECS%% *}
           current=$(sed -n 's/^%global tag[[:space:]]\+//p' "$first")
           latest=$(bash .github/scripts/bump-spec.sh latest-tag "$UPSTREAM")
           echo "current=$current latest=$latest"
-          if bash .github/scripts/bump-spec.sh needs-bump "$current" "$latest"; then
+          if [ -n "$latest" ] && { [ "$FORCE" = "true" ] || bash .github/scripts/bump-spec.sh needs-bump "$current" "$latest"; }; then
             for spec in $SPECS; do
               bash .github/scripts/bump-spec.sh apply "$spec" "$latest"
             done
@@ -70,5 +76,6 @@ jobs:
             Automated bump to upstream release ${{ steps.bump.outputs.version }}
             (${{ matrix.upstream }}). Packit will build it on Copr; check those
             builds before merging, as new releases can need spec changes.
+            ${{ inputs.force && 'Pipeline test: forced run for the current upstream version.' || '' }}
 
             Signed-off-by: Jon Mulder <jon.e.mulder@gmail.com>
