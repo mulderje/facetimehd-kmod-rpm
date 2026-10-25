@@ -38,6 +38,7 @@ case "${1:-} ${2:-}" in
     "pr view")
         case "$*" in
             *"--json comments"*) jq -r "$jq_expr" "$GH_COMMENTS" ;;
+            *"--json labels"*)   printf '%s' "${GH_LABELS:-}" ;;
             *"--json title"*)    echo "Update facetimehd to 0.7.3" ;;
             *"--json state"*)
                 if [ -n "${GH_STATE_FILE:-}" ]; then

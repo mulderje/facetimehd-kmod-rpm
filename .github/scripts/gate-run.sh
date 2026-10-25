@@ -6,7 +6,7 @@
 # Without it (scheduled sweep or manual dispatch) every open bot PR is. The sweep exists
 # because check_run events are not delivered for PRs opened with the workflow token.
 #
-# With SMOKE=true (a forced pipeline test) a green PR is closed and its branch deleted
+# A green PR labelled ci-test (a forced pipeline test), or any PR when SMOKE=true, is closed and its branch deleted
 # instead of merged, so tests leave nothing on main.
 #
 # Environment: GH_TOKEN, REPO, OWNER, SIGNOFF, optional SHA, SMOKE and RUN_URL. Needs gh and jq.
@@ -69,7 +69,12 @@ while read -r n sha <&3; do
                 echo "PR #$n: already merged"
                 continue
             fi
-            if [ "${SMOKE:-}" = "true" ]; then
+            # The label travels with the PR, so every gate run (event, sweep, bump run) agrees
+            smoke=${SMOKE:-}
+            if gh pr view "$n" --json labels --jq '.labels[].name' </dev/null | grep -qx ci-test; then
+                smoke=true
+            fi
+            if [ "$smoke" = "true" ]; then
                 gh pr close "$n" --delete-branch --comment "Pipeline test passed: all Packit builds are green. Closed without merging. Workflow run: $RUN_URL
 <!-- bump-gate:smoke-passed:$sha -->" </dev/null
                 continue
