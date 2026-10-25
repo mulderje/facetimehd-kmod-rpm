@@ -17,6 +17,7 @@ URL:        %{forgeurl}
 Source:     %{forgesource}
 
 BuildArch:  noarch
+ExclusiveArch:  x86_64
 
 Provides: %{name}-kmod-common = %{version}
 Requires: %{name}-kmod >= %{version}
@@ -43,6 +44,9 @@ EOF
 %config(noreplace) %{_sysconfdir}/modules-load.d/facetimehd.conf
 
 %changelog
+* Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
+- Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
+
 * Sun Apr 19 2026 Jon Mulder <jon.e.mulder@gmail.com> - 0.7.0.1-1
 - Update to 0.7.0.1 release (fixes build against kernel >= 7.0)
 - Package upstream LICENSE and README.md via %%license/%%doc macros
