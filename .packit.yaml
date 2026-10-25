@@ -1,7 +1,7 @@
 # .packit.yaml
 packages:
   facetimehd:
-    upstream_project_url: https://github.com
+    upstream_project_url: https://github.com/patjak/facetimehd
     upstream_package_name: facetimehd
     upstream_tag_template: "{version}"
     specfile_path: facetimehd/facetimehd.spec
@@ -9,7 +9,7 @@ packages:
       - facetimehd/facetimehd.spec
 
   facetimehd-kmod:
-    upstream_project_url: https://github.com
+    upstream_project_url: https://github.com/patjak/facetimehd
     upstream_package_name: facetimehd-kmod
     upstream_tag_template: "{version}"
     specfile_path: facetimehd-kmod/facetimehd-kmod.spec
@@ -17,7 +17,7 @@ packages:
       - facetimehd-kmod/facetimehd-kmod.spec
 
   facetimehd-firmware:
-    upstream_project_url: https://github.com-firmware
+    upstream_project_url: https://github.com/patjak/facetimehd-firmware
     upstream_package_name: facetimehd-firmware
     upstream_tag_template: "v{version}"
     specfile_path: facetimehd-firmware/facetimehd-firmware.spec
