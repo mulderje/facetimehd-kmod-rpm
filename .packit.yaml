@@ -1,34 +1,36 @@
 # .packit.yaml
 packages:
   facetimehd:
-    upstream_project_url: https://github.com/patjak/facetimehd
+    upstream_project_url: https://github.com
     upstream_package_name: facetimehd
     upstream_tag_template: "{version}"
     specfile_path: facetimehd/facetimehd.spec
-    synced_files:
+    files_to_sync:
       - facetimehd/facetimehd.spec
 
   facetimehd-kmod:
-    upstream_project_url: https://github.com/patjak/facetimehd
+    upstream_project_url: https://github.com
     upstream_package_name: facetimehd-kmod
     upstream_tag_template: "{version}"
     specfile_path: facetimehd-kmod/facetimehd-kmod.spec
-    synced_files:
+    files_to_sync:
       - facetimehd-kmod/facetimehd-kmod.spec
 
   facetimehd-firmware:
-    upstream_project_url: https://github.com/patjak/facetimehd-firmware
+    upstream_project_url: https://github.com-firmware
     upstream_package_name: facetimehd-firmware
-    upstream_tag_template: "v{version}"
+    upstream_tag_template: "{version}"
     specfile_path: facetimehd-firmware/facetimehd-firmware.spec
-    synced_files:
+    files_to_sync:
       - facetimehd-firmware/facetimehd-firmware.spec
 
 jobs:
+  # 1. Independent upstream release polling
   - job: propose_downstream
     trigger: release
     packages: [facetimehd, facetimehd-kmod, facetimehd-firmware]
 
+  # 2. PR Scratch Builds restricted to x86_64 with network access enabled
   - job: copr_build
     trigger: pull_request
     packages: [facetimehd, facetimehd-kmod, facetimehd-firmware]
@@ -37,6 +39,7 @@ jobs:
     targets:
       - fedora-all-x86_64
 
+  # 3. Stable Production Builds restricted to x86_64 with network access enabled
   - job: copr_build
     trigger: commit
     branch: main
@@ -44,4 +47,4 @@ jobs:
     project: mulderje/facetimehd-kmod
     enable_net: true
     targets:
-      - fedora-all-x86_64
+      - fedora-stable-x86_64
