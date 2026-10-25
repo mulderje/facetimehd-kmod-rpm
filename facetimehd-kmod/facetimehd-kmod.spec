@@ -91,8 +91,8 @@ chmod 0755 $RPM_BUILD_ROOT%{kmodinstdir_prefix}*%{kmodinstdir_postfix}/* || :
 %if "%{?kernels}" == ""
 kdir=$(ls -d %{_usrsrc}/kernels/*/ | sort -V | tail -n 1)
 echo "Compile test against ${kdir}"
-cp -a %{srcname}-%{version} _kmod_check
-make -C "${kdir}" M="${PWD}/_kmod_check" modules
+# rpm has already cd'd into the extracted source tree; nothing from here is installed
+make -C "${kdir}" M="${PWD}" modules
 %endif
 
 %changelog
