@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Work on branch `auto-merge-design`. Never push to `main`. Leave PR #5 and PR #8 alone (PR #8 is the bump bot's).
-- Packit needs a PR to run builds: the executor must ask the user before opening one for this branch.
+- Everything that can runs in native GitHub CI (`ci.yml`) and on Packit/Copr (test builds and package distribution). The user approved opening the PR for this branch.
 - Package directories: `facetimehd/`, `facetimehd-kmod/`, `facetimehd-firmware/`. Check names: PR builds `rpm-build:<chroot>:<package>`, `main` builds `rpm-build:main:<chroot>:<package>`, from app slug `packit-as-a-service`. `osh-diff-scan:*` checks are always ignored.
 - Branch prefixes the automation acts on: `bump/*` (from `upstream-bump.yml`) and `revert/*` (from the watchdog).
 - Workflow permissions: `contents: write`, `pull-requests: write`, `checks: read`. Third-party actions pinned by SHA (reuse `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1`). Prefer plain `gh` and bash over new actions.
@@ -46,8 +46,19 @@
 - [ ] **Step 2: facetimehd spec.** In `%install` create `%{buildroot}%{_sysconfdir}/modprobe.d/facetimehd.conf` (mode 0644, via the same `install -d` / `install -p -m 0644 /dev/stdin ... <<'EOF'` style as the modules-load file) containing a one-line comment and `blacklist bdc_pci`. List it in `%files` as `%config(noreplace) %{_sysconfdir}/modprobe.d/facetimehd.conf`. Changelog bullet.
 - [ ] **Step 3: firmware spec.** Wrap the existing `%make_build ...` line in `%build` in `for i in 1 2 3; do ... && break; [ "$i" -eq 3 ] && exit 1; sleep 15; done`. Changelog bullet.
 - [ ] **Step 4: `.packit.yaml`.** Add `osh_diff_scan_after_copr_build: false` to the firmware `copr_build` job with `trigger: pull_request` only. Validate: `python3 -c "import yaml;d=yaml.safe_load(open('.packit.yaml'));print([j.get('osh_diff_scan_after_copr_build') for j in d['jobs']])"`. Expected: `[None, False, None, None]`.
-- [ ] **Step 5: Commit, push, ask the user for permission to open a PR for this branch, open it, wait for Packit.** Expected: all 12 `rpm-build` checks `success`; the kmod build log's `Executing(%check)` section shows a `make -C /usr/src/kernels/... modules` run and `Wrote:` lines still list `akmod-facetimehd` and `kmod-facetimehd`; the firmware PR job no longer reports an `osh-diff-scan` check.
+- [ ] **Step 5: Commit, push, wait for Packit on the existing PR.** Expected: all 12 `rpm-build` checks `success`; the kmod build log's `Executing(%check)` section shows a `make -C /usr/src/kernels/... modules` run and `Wrote:` lines still list `akmod-facetimehd` and `kmod-facetimehd`; the firmware PR job no longer reports an `osh-diff-scan` check.
 - [ ] **Step 6: Negative test.** Push a temporary commit that adds `false` as the first line of the `%check` body. Expected: the four `facetimehd-kmod` checks go `failure` with `Bad exit status ... (%check)` in the log, the other eight stay green. Then `git revert` that commit and push. Expected: 12 green again.
+
+### Task 1b: CI workflow for the repo's own tests
+
+**Files:**
+- Create: `.github/workflows/ci.yml`
+
+**Interfaces:**
+- Produces: a `ci` check on every pull request and on pushes to `main` that runs every `.github/scripts/test-*.sh` and parses every workflow and `.packit.yaml` as YAML. Later tasks' tests run here with no other wiring.
+
+- [ ] **Step 1: Write `ci.yml`.** Triggers `pull_request` and `push` to `main`; permissions `contents: read`; one job on `ubuntu-latest` with pinned `actions/checkout`. Steps: a loop `for t in .github/scripts/test-*.sh; do bash "$t"; done`; then `python3 - <<EOF` that loads each `.github/workflows/*.yml` and `.packit.yaml` with `yaml.safe_load`.
+- [ ] **Step 2: Commit, push.** Expected on the PR: the `ci` check is green (`test-bump-spec.sh` runs now; later test scripts run automatically as they are added).
 
 ### Task 2: PR gate decision script
 
