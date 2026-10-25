@@ -58,6 +58,8 @@ jobs:
     runs-on: ubuntu-latest
     # Packit's builds take about ten minutes per phase; leave generous room
     timeout-minutes: 180
+    # Holds BOT_APP_ID and BOT_PRIVATE_KEY (the GitHub App that opens the PRs)
+    environment: Default
     strategy:
       fail-fast: false
       matrix:
@@ -95,11 +97,22 @@ jobs:
             echo "bump=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # PRs opened with the workflow token get no Packit check events and wait for a manual
+      # CI approval; PRs opened by an App behave like any contributor's.
+      - name: Get the bot token
+        id: app
+        if: steps.bump.outputs.bump == 'true'
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+
       - name: Open the bump PR
         id: cpr
         if: steps.bump.outputs.bump == 'true'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
+          token: ${{ steps.app.outputs.token }}
           base: main
           branch: bump/${{ matrix.name }}
           title: Update ${{ matrix.name }} to ${{ steps.bump.outputs.version }}
