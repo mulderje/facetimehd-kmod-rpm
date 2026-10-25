@@ -37,7 +37,6 @@
 - Modify: `facetimehd-kmod/facetimehd-kmod.spec` (BuildRequires line; new `%check` section before `%changelog`; changelog)
 - Modify: `facetimehd/facetimehd.spec` (`%install`, `%files`, changelog)
 - Modify: `facetimehd-firmware/facetimehd-firmware.spec` (`%build`, changelog)
-- Modify: `.packit.yaml` (firmware `pull_request` job)
 
 **Interfaces:**
 - Produces: a Packit PR whose 12 `rpm-build` checks include a real compile of the driver on every target.

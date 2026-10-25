@@ -102,15 +102,15 @@ Every failure path posts a message that says what failed and links to it.
 
 ### 4. Packaging additions
 
-- `facetimehd/facetimehd.spec`: ship `/etc/modprobe.d/facetimehd.conf` containing
-  `blacklist bdc_pci` (mode 0644, `%config(noreplace)`), created in `%install` like the
-  existing `modules-load.d` file and listed explicitly in `%files`.
-- `facetimehd-firmware/facetimehd-firmware.spec`: wrap the `make` call in `%build` in a
-  3-attempt loop with a 15 second sleep between attempts; the build fails only if all
-  attempts fail.
-- `.packit.yaml`: set `osh_diff_scan_after_copr_build: false` on the firmware
-  `pull_request` job only. The kmod and facetimehd scans stay on. The gate ignores all
-  `osh-diff-scan:*` checks.
+- `facetimehd/facetimehd.spec`: ship `/etc/modprobe.d/facetimehd.conf` (mode 0644,
+  `%config(noreplace)`), generated in `%install` from the `MODULES_CONF` entries in
+  upstream's `dkms.conf` (currently `blacklist bdc_pci`); the build fails if there are none.
+  Listed explicitly in `%files`.
+- `facetimehd-firmware/facetimehd-firmware.spec`: retry only the download target
+  (`make AppleCameraInterface`) up to 3 times with a 15 second sleep, then run the normal
+  `make` for the offline extraction.
+- OSH: the firmware scan stays enabled (it is neutral and rawhide-only); the no-network
+  failure is tracked in a GitHub issue. The gate ignores all `osh-diff-scan:*` checks.
 
 ### 5. Messages
 
