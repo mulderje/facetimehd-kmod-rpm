@@ -26,9 +26,11 @@ packages:
       - ./facetimehd
     specfile_path: facetimehd.spec
     actions:
+      # Fetch the upstream tarball named by the spec's Source (via %forgesource)
+      # instead of hardcoding URLs; the last stdout line must be the archive name.
       create-archive:
-        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
-        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'spectool -g facetimehd.spec >&2'
+        - bash -c 'basename "$(spectool -l facetimehd.spec | sed -n "1s/^Source0: *//p")"'
 
   facetimehd-kmod:
     downstream_package_name: facetimehd-kmod
@@ -36,9 +38,11 @@ packages:
       - ./facetimehd-kmod
     specfile_path: facetimehd-kmod.spec
     actions:
+      # Fetch the upstream tarball named by the spec's Source (via %forgesource)
+      # instead of hardcoding URLs; the last stdout line must be the archive name.
       create-archive:
-        - bash -c 'curl -fsSL "https://github.com/patjak/facetimehd/archive/${PACKIT_PROJECT_VERSION}/facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz" -o "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
-        - bash -c 'echo "facetimehd-${PACKIT_PROJECT_VERSION}.tar.gz"'
+        - bash -c 'spectool -g facetimehd-kmod.spec >&2'
+        - bash -c 'basename "$(spectool -l facetimehd-kmod.spec | sed -n "1s/^Source0: *//p")"'
 
   facetimehd-firmware:
     downstream_package_name: facetimehd-firmware
