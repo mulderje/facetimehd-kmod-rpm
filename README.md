@@ -18,6 +18,10 @@ Build process / TODOs:
   - Packit builds each PR in [mulderje/facetimehd-kmod-pr](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod-pr/) and each push to `main` in [mulderje/facetimehd-kmod](https://copr.fedorainfracloud.org/coprs/mulderje/facetimehd-kmod/)
   - Bump PRs merge themselves once all Packit builds pass (`.github/workflows/bump-merge.yml`). The kmod build compiles the driver against the newest `kernel-devel` in `%check`, so a green build means it compiles. If the `main` builds of a bump fail, `.github/workflows/main-watchdog.yml` opens a revert PR and comments why; the next daily bump retries
 
+## Commit sign-off
+
+Every squash-merged commit on `main` carries a `Signed-off-by:` trailer. GitHub makes the squash commit with the PR author as author and signs it itself (Verified); the auto-merge workflow adds the trailer, and manual squash merges should include it (or set the repo's default squash message to the PR title and description, which carry it).
+
 ## Known issues and follow-ups
 
 - The OpenScanHub diff scan for `facetimehd-firmware` ends neutral on rawhide: OSH builds the baseline SRPM in a chroot without network, and the firmware's `%build` downloads Apple's driver. It is harmless (the auto-merge gate ignores `osh-diff-scan:*`); a fix is still to be found. (Issues are disabled on this repo, so it is tracked here.)
