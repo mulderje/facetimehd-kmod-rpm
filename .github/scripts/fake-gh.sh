@@ -8,6 +8,7 @@
 #   GH_COMMENTS      JSON object {comments: [...]} for "gh pr view --json comments"
 #   GH_MERGE_RC      exit status of "gh pr merge" (default 0)
 #   GH_STATE_FILE    lines served, one per call, for "gh pr view --json state" (else GH_PR_STATE)
+#   GH_API_FAILS     file holding how many api calls should fail first (retry tests)
 #   GH_HEAD, GH_MERGE_SHA  served for headRefOid and mergeCommit
 set -uo pipefail
 {
@@ -27,6 +28,12 @@ done
 
 case "${1:-} ${2:-}" in
     "api "*)
+        # GH_API_FAILS=<file>: while it holds a positive count, api calls fail with no output
+        if [ -n "${GH_API_FAILS:-}" ] && [ "$(cat "$GH_API_FAILS")" -gt 0 ]; then
+            echo $(( $(cat "$GH_API_FAILS") - 1 )) > "$GH_API_FAILS"
+            echo "unexpected end of JSON input" >&2
+            exit 1
+        fi
         url=$2; [ "$2" = "--paginate" ] && url=$3
         case "$url" in
             *check-runs*)            file=$GH_CHECKS ;;
