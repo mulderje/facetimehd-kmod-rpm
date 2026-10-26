@@ -91,4 +91,21 @@ printf '%s' "$bump_pr" > "$tmp/pulls.json"
 run "sweep"
 git ls-remote --exit-code --heads "$tmp/origin.git" "$revert_branch" >/dev/null || fail "sweep: revert branch missing"
 
+# (z) two flaky api failures are retried, a persistent one does not hide other commits
+builds none > "$tmp/checks.json"
+echo 2 > "$tmp/fails"
+run "flaky api" SHA="$bump" GH_API_FAILS="$tmp/fails" RETRY_SECONDS=0
+grep -qF "watchdog verdict ok" "$tmp/out" || { cat "$tmp/out"; fail "flaky api: no verdict after retries"; }
+echo 99 > "$tmp/fails"
+: > "$tmp/calls"
+set +e
+( cd "$tmp/repo" && git switch -q --detach origin/main \
+  && env PATH="$tmp/bin:$PATH" GH_CALLS="$tmp/calls" GH_PULLS="$tmp/pulls.json" GH_CHECKS="$tmp/checks.json" \
+     GH_COMMENTS="$tmp/comments.json" GH_API_FAILS="$tmp/fails" RETRY_SECONDS=0 REPO=o/r OWNER=mulderje \
+     bash "$here/watchdog-run.sh" ) > "$tmp/out" 2>&1
+rc=$?
+set -e
+[ "$rc" != 0 ] || fail "persistent api failure: sweep exited 0"
+[ "$(grep -c 'could not be checked' "$tmp/out")" = 2 ] || { cat "$tmp/out"; fail "persistent api failure: sweep stopped early"; }
+
 echo PASS

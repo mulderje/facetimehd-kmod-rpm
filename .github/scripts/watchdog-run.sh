@@ -17,16 +17,26 @@ RUN_URL=${RUN_URL:-}
 SHA=${SHA:-}
 SWEEP_COMMITS=${SWEEP_COMMITS:-20}
 
+# GitHub's API occasionally returns a truncated body; retry before giving up
+api() {
+    local i
+    for i in 1 2 3; do
+        gh api "$@" </dev/null && return 0
+        sleep "${RETRY_SECONDS:-3}"
+    done
+    return 1
+}
+
 check_commit() {
     local sha=$1 pr changed result verdict marker failures branch title revert_pr checks
 
     # Only commits on main from a merged bot bump PR are watched. Revert merges and manual
     # commits are ignored, so a failing revert cannot loop.
     git merge-base --is-ancestor "$sha" origin/main || { echo "${sha:0:7}: not on main"; return 0; }
-    pr=$(gh api "repos/$REPO/commits/$sha/pulls" --jq '
+    pr=$(api "repos/$REPO/commits/$sha/pulls" --jq '
         [ .[] | select(.merged_at != null)
               | select(.user.login | endswith("[bot]"))
-              | select(.head.ref | test("^bump/")) | .number ] | first // empty' </dev/null)
+              | select(.head.ref | test("^bump/")) | .number ] | first // empty') || return 1
     if [ -z "$pr" ]; then
         echo "${sha:0:7}: not from a bump PR"
         return 0
@@ -40,9 +50,9 @@ check_commit() {
     fi
 
     checks=$(mktemp)
-    gh api --paginate "repos/$REPO/commits/$sha/check-runs?per_page=100" \
-        --jq '.check_runs[] | {name, status, conclusion, html_url, app: .app.slug}' </dev/null \
-        | jq -s . > "$checks"
+    api --paginate "repos/$REPO/commits/$sha/check-runs?per_page=100" \
+        --jq '.check_runs[] | {name, status, conclusion, html_url, app: .app.slug}' \
+        | jq -s . > "$checks" || return 1
     result=$(bash "$here/watchdog-decide.sh" "$changed" < "$checks")
     verdict=$(head -n 1 <<<"$result")
     echo "${sha:0:7}: watchdog verdict $verdict (changed: $changed)"
@@ -111,7 +121,10 @@ $marker" </dev/null
 if [ -n "$SHA" ]; then
     check_commit "$SHA"
 else
+    # One commit that cannot be checked must not hide the rest; report it at the end
+    failed=0
     for sha in $(git log origin/main -n "$SWEEP_COMMITS" --format=%H); do
-        check_commit "$sha"
+        check_commit "$sha" || { echo "${sha:0:7}: could not be checked"; failed=1; }
     done
+    exit "$failed"
 fi
