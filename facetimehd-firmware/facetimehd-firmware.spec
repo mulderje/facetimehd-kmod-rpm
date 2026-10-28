@@ -57,6 +57,9 @@ done
 %changelog
 * Wed Oct 28 2026 github-actions <noreply@github.com> - 1.1.0-1
 - Update to 1.1.0 release
+
+* Wed Oct 28 2026 github-actions <noreply@github.com> - 1.1.0-1
+- Update to 1.1.0 release
 - Package the sensor calibration set files (*_01XX.dat) that 1.1.0 installs, and own the firmware directory
 
 * Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 1.0.0-1
