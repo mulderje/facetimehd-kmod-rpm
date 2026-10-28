@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     # Packit's builds take about ten minutes per phase; leave generous room
     timeout-minutes: 180
-    # Holds BOT_APP_ID and BOT_PRIVATE_KEY (the GitHub App that opens the PRs)
+    # Holds BOT_CLIENT_ID and BOT_PRIVATE_KEY (the GitHub App that opens the PRs)
     environment: Default
     strategy:
       fail-fast: false
@@ -104,7 +104,7 @@ jobs:
         if: steps.bump.outputs.bump == 'true'
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         with:
-          app-id: ${{ vars.BOT_APP_ID }}
+          client-id: ${{ vars.BOT_CLIENT_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
 
       - name: Open the bump PR
