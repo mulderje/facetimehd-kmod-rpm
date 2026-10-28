@@ -48,11 +48,16 @@ done
 
 %files
 %license LICENSE
+%dir %{_prefix}/lib/firmware/facetimehd
 %{_prefix}/lib/firmware/facetimehd/firmware.bin
+# Per-sensor calibration (set) files, one per supported camera model; upstream installs
+# whatever *_01XX.dat it extracted, so the list follows the release
+%{_prefix}/lib/firmware/facetimehd/*_01XX.dat
 
 %changelog
 * Wed Oct 28 2026 github-actions <noreply@github.com> - 1.1.0-1
 - Update to 1.1.0 release
+- Package the sensor calibration set files (*_01XX.dat) that 1.1.0 installs, and own the firmware directory
 
 * Sun Oct 25 2026 Jon Mulder <jon.e.mulder@gmail.com> - 1.0.0-1
 - Restrict to x86_64 (driver and firmware are x86 only; no i686 kernels in Fedora)
