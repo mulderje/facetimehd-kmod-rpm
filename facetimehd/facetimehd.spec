@@ -55,6 +55,9 @@ chmod 0644 %{buildroot}%{_sysconfdir}/modprobe.d/facetimehd.conf
 %config(noreplace) %{_sysconfdir}/modprobe.d/facetimehd.conf
 
 %changelog
+* Wed Oct 28 2026 github-actions <noreply@github.com> - 0.7.2-1
+- Update to 0.7.2 release
+
 * Sun Oct 25 2026 github-actions <noreply@github.com> - 0.7.2-1
 - Update to 0.7.2 release
 
